@@ -6,6 +6,7 @@ import {
   ScrollView,
   Alert,
   Platform,
+  Dimensions, // Importamos Dimensions
 } from 'react-native';
 import {
   Card,
@@ -164,6 +165,7 @@ export default function TicketDetailScreen({ user }: TicketDetailScreenProps) {
         style={styles.scrollView} 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={true}
+        scrollIndicatorInsets={{ right: 1 }} // Ayuda visual en iOS, no afecta web pero es buena práctica
       >
         <Surface style={styles.header}>
           <View style={styles.headerContent}>
@@ -253,9 +255,20 @@ export default function TicketDetailScreen({ user }: TicketDetailScreenProps) {
 }
 
 const styles = StyleSheet.create({
-    mainContainer: { flex: 1, height: '100%', backgroundColor: '#F5F5F5' }, // Contenedor principal con altura fija
-    scrollView: { flex: 1 }, // ScrollView ocupa todo el espacio disponible del padre
-    scrollContent: { paddingBottom: 100, flexGrow: 1 },
+    mainContainer: { 
+        flex: 1, 
+        backgroundColor: '#F5F5F5',
+        // Fix específico para Web: Altura del viewport y ocultar desbordamiento del contenedor padre
+        ...(Platform.OS === 'web' ? { height: '100vh', overflow: 'hidden' } : {})
+    },
+    scrollView: { 
+        flex: 1,
+        width: '100%',
+    },
+    scrollContent: { 
+        paddingBottom: 100, 
+        flexGrow: 1 
+    },
     loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F5F5F5' },
     loadingText: { fontSize: 16, color: '#666', marginTop: 16 },
     header: { backgroundColor: 'white', padding: 16, elevation: 2 },
