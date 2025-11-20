@@ -19,6 +19,7 @@ import {
   TextInput,
   Avatar,
   Menu,
+  IconButton, // Importamos IconButton
 } from 'react-native-paper';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -76,7 +77,9 @@ export default function TicketDetailScreen({ user }: TicketDetailScreenProps) {
   const [newComment, setNewComment] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isAddingComment, setIsAddingComment] = useState(false);
-  const [priorityMenuVisible, setPriorityMenuVisible] = useState(false);
+  
+  // Estado para el menú de acciones de administrador
+  const [adminMenuVisible, setAdminMenuVisible] = useState(false);
 
   useEffect(() => {
     const ticketDocRef = doc(db, 'tickets', ticketId);
@@ -119,6 +122,7 @@ export default function TicketDetailScreen({ user }: TicketDetailScreenProps) {
     const ticketDocRef = doc(db, 'tickets', ticketId);
     try {
       await updateDoc(ticketDocRef, { ...dataToUpdate, updatedAt: serverTimestamp() });
+      setAdminMenuVisible(false); // Cerrar menú después de actualizar
     } catch (error) {
       Alert.alert('Error', 'No se pudo actualizar el ticket.');
     }
@@ -126,6 +130,7 @@ export default function TicketDetailScreen({ user }: TicketDetailScreenProps) {
 
   const handleDelete = () => {
     if (!ticket) return;
+    setAdminMenuVisible(false);
     Alert.alert("Eliminar Ticket", "¿Estás seguro? Esta acción no se puede deshacer.", [
       { text: "Cancelar", style: "cancel" },
       {
@@ -166,6 +171,7 @@ export default function TicketDetailScreen({ user }: TicketDetailScreenProps) {
       >
         <Surface style={styles.header}>
           <View style={styles.headerContent}>
+            {/* Contenedor del Título y Chips */}
             <View style={styles.titleContainer}>
               <Title style={styles.title}>{ticket.title}</Title>
               <View style={styles.metaContainer}>
@@ -193,6 +199,40 @@ export default function TicketDetailScreen({ user }: TicketDetailScreenProps) {
                 </Chip>
               </View>
             </View>
+
+            {/* Menú de Administrador en la parte superior derecha */}
+            {user?.role === 'admin' && (
+              <View>
+                <Menu
+                  visible={adminMenuVisible}
+                  onDismiss={() => setAdminMenuVisible(false)}
+                  anchor={
+                    <IconButton
+                      icon="cog-outline"
+                      iconColor="#2E7D32"
+                      size={24}
+                      onPress={() => setAdminMenuVisible(true)}
+                    />
+                  }
+                >
+                  <Menu.Item onPress={() => {}} title="Acciones" disabled />
+                  <Divider />
+                  {ticket.status !== 'resolved' && (
+                     <Menu.Item leadingIcon="check" onPress={() => handleUpdate({ status: 'resolved' })} title="Resolver" />
+                  )}
+                  {ticket.status !== 'in_progress' && (
+                     <Menu.Item leadingIcon="play" onPress={() => handleUpdate({ status: 'in_progress' })} title="En Progreso" />
+                  )}
+                  <Divider />
+                  <Menu.Item title="Prioridad" disabled />
+                  <Menu.Item leadingIcon="arrow-down" onPress={() => handleUpdate({ priority: 'low' })} title="Baja" />
+                  <Menu.Item leadingIcon="minus" onPress={() => handleUpdate({ priority: 'medium' })} title="Media" />
+                  <Menu.Item leadingIcon="arrow-up" onPress={() => handleUpdate({ priority: 'high' })} title="Alta" />
+                  <Divider />
+                  <Menu.Item leadingIcon="trash-can-outline" onPress={handleDelete} title="Eliminar Ticket" titleStyle={{color: '#B00020'}} />
+                </Menu>
+              </View>
+            )}
           </View>
         </Surface>
 
@@ -227,25 +267,7 @@ export default function TicketDetailScreen({ user }: TicketDetailScreenProps) {
           </Card.Content>
         </Card>
 
-        {user?.role === 'admin' && (
-          <Card style={styles.card}>
-            <Card.Content>
-              <Title style={styles.cardTitle}>Acciones de Administrador</Title>
-              <View style={styles.actionGrid}>
-                  <Menu
-                      visible={priorityMenuVisible}
-                      onDismiss={() => setPriorityMenuVisible(false)}
-                      anchor={<Button mode="outlined" onPress={() => setPriorityMenuVisible(true)} icon="arrow-up-circle-outline" style={styles.actionButton} textColor="#2E7D32">Prioridad: {ticket.priority}</Button>}
-                  >
-                      {TICKET_PRIORITIES.map(p => <Menu.Item key={p.value} onPress={() => { handleUpdate({ priority: p.value }); setPriorityMenuVisible(false);}} title={p.label} />)}
-                  </Menu>
-                  {ticket.status !== 'resolved' && <Button mode="contained" onPress={() => handleUpdate({ status: 'resolved' })} style={[styles.actionButton, {backgroundColor: '#1B5E20'}]} icon="check" textColor="white">Resolver</Button>}
-                  {ticket.status !== 'in_progress' && <Button mode="outlined" onPress={() => handleUpdate({ status: 'in_progress' })} style={styles.actionButton} icon="play" textColor="#2E7D32">En Progreso</Button>}
-                  <Button mode="outlined" onPress={handleDelete} style={[styles.actionButton, styles.deleteButton]} icon="trash-can-outline" textColor="#B00020">Eliminar</Button>
-              </View>
-            </Card.Content>
-          </Card>
-        )}
+        {/* Se ha eliminado el bloque de acciones inferior para solucionar el scroll */}
       </ScrollView>
     </View>
   );
@@ -260,14 +282,14 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scrollContent: { 
-        paddingBottom: 100, 
+        paddingBottom: 40, 
         flexGrow: 1 
     },
     loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F5F5F5' },
     loadingText: { fontSize: 16, color: '#666', marginTop: 16 },
     header: { backgroundColor: 'white', padding: 16, elevation: 2 },
     headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-    titleContainer: { flex: 1 },
+    titleContainer: { flex: 1, marginRight: 10 }, // Asegura que el título no se monte sobre el botón
     title: { fontSize: 22, fontWeight: 'bold', color: '#333', marginBottom: 12 },
     metaContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     categoryChip: { justifyContent: 'center', alignItems: 'center' },
