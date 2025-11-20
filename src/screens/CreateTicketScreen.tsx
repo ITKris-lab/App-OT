@@ -7,7 +7,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  TouchableOpacity, // Importar TouchableOpacity
+  TouchableOpacity,
 } from 'react-native';
 import {
   TextInput,
@@ -18,6 +18,7 @@ import {
   Text,
   Surface,
   Divider,
+  Snackbar,
 } from 'react-native-paper';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
@@ -46,6 +47,7 @@ export default function CreateTicketScreen({ user }: CreateTicketScreenProps) {
   const [category, setCategory] = useState<TicketCategory>('hardware');
   const [location, setLocation] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
 
   const handleSubmit = async () => {
     if (!title.trim() || !description.trim() || !location.trim() || !user) {
@@ -69,7 +71,12 @@ export default function CreateTicketScreen({ user }: CreateTicketScreenProps) {
         updatedAt: serverTimestamp(),
       });
 
-      Alert.alert('Éxito', 'Ticket creado correctamente', [{ text: 'OK', onPress: () => navigation.goBack() }]);
+      // Mostrar notificación visual y esperar antes de salir
+      setSnackbarVisible(true);
+      setTimeout(() => {
+        navigation.goBack();
+      }, 1500);
+
     } catch (error) {
       console.error("Error creating ticket:", error);
       Alert.alert('Error', 'No se pudo crear el ticket. Inténtalo de nuevo.');
@@ -123,6 +130,20 @@ export default function CreateTicketScreen({ user }: CreateTicketScreenProps) {
           </Card.Content>
         </Card>
       </ScrollView>
+      
+      <Snackbar
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        duration={1500}
+        style={{ backgroundColor: '#2E7D32', marginBottom: 20 }}
+        action={{
+          label: 'OK',
+          onPress: () => {
+            navigation.goBack();
+          },
+        }}>
+        Ticket creado exitosamente
+      </Snackbar>
     </KeyboardAvoidingView>
   );
 }
