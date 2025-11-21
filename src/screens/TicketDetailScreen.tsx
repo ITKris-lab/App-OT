@@ -3,9 +3,9 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
   Alert,
   Platform,
+  FlatList, // Usamos FlatList en lugar de ScrollView
 } from 'react-native';
 import {
   Card,
@@ -19,7 +19,7 @@ import {
   TextInput,
   Avatar,
   Menu,
-  IconButton, // Importamos IconButton
+  IconButton,
 } from 'react-native-paper';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -27,7 +27,7 @@ import { doc, onSnapshot, collection, addDoc, updateDoc, serverTimestamp, orderB
 import { db } from '../firebaseConfig';
 import { Ticket, Comment, User, TicketStatus, TicketPriority, TicketCategory } from '../types';
 
-// Constantes con íconos de MaterialCommunityIcons
+// Constantes (sin cambios)
 const TICKET_CATEGORIES: { value: TicketCategory; label: string; icon: keyof typeof MaterialCommunityIcons.glyphMap }[] = [
   { value: 'hardware', label: 'Hardware', icon: 'memory' },
   { value: 'software', label: 'Software', icon: 'apps' },
@@ -51,7 +51,6 @@ const TICKET_STATUSES: { value: TicketStatus; label: string; color: string }[] =
   { value: 'closed', label: 'Cerrado', color: '#607D8B' },
 ];
 
-// Helper para determinar si un color es claro u oscuro
 const isColorLight = (color: string): boolean => {
   if (!color || !color.startsWith('#')) return false;
   const hex = color.replace('#', '');
@@ -77,8 +76,6 @@ export default function TicketDetailScreen({ user }: TicketDetailScreenProps) {
   const [newComment, setNewComment] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isAddingComment, setIsAddingComment] = useState(false);
-  
-  // Estado para el menú de acciones de administrador
   const [adminMenuVisible, setAdminMenuVisible] = useState(false);
 
   useEffect(() => {
@@ -88,7 +85,10 @@ export default function TicketDetailScreen({ user }: TicketDetailScreenProps) {
         const data = doc.data();
         setTicket({ id: doc.id, ...data, createdAt: data.createdAt?.toDate() ?? new Date(), updatedAt: data.updatedAt?.toDate() ?? new Date() } as Ticket);
       } else {
-        navigation.goBack();
+        // Si el documento no existe (fue eliminado), volvemos atrás
+        if (navigation.canGoBack()) {
+           navigation.goBack();
+        }
       }
       setIsLoading(false);
     });
@@ -122,28 +122,44 @@ export default function TicketDetailScreen({ user }: TicketDetailScreenProps) {
     const ticketDocRef = doc(db, 'tickets', ticketId);
     try {
       await updateDoc(ticketDocRef, { ...dataToUpdate, updatedAt: serverTimestamp() });
-      setAdminMenuVisible(false); // Cerrar menú después de actualizar
+      setAdminMenuVisible(false);
     } catch (error) {
       Alert.alert('Error', 'No se pudo actualizar el ticket.');
+    }
+  };
+
+  const performDelete = async () => {
+    if (!ticket) return;
+    try {
+      await deleteDoc(doc(db, 'tickets', ticket.id));
+      // Navegación explícita tras eliminar
+      navigation.goBack(); 
+    } catch (error) { 
+      console.error(error);
+      Alert.alert('Error', 'No se pudo eliminar el ticket.'); 
     }
   };
 
   const handleDelete = () => {
     if (!ticket) return;
     setAdminMenuVisible(false);
-    Alert.alert("Eliminar Ticket", "¿Estás seguro? Esta acción no se puede deshacer.", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Eliminar", style: "destructive",
-        onPress: async () => {
-          try {
-            await deleteDoc(doc(db, 'tickets', ticket.id));
-          } catch (error) { 
-            Alert.alert('Error', 'No se pudo eliminar el ticket.'); 
-          }
+
+    // En Web usamos window.confirm para mayor compatibilidad
+    if (Platform.OS === 'web') {
+      const confirm = window.confirm("¿Estás seguro de eliminar este ticket? Esta acción no se puede deshacer.");
+      if (confirm) {
+        performDelete();
+      }
+    } else {
+      // En Móvil usamos Alert nativo
+      Alert.alert("Eliminar Ticket", "¿Estás seguro? Esta acción no se puede deshacer.", [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar", style: "destructive",
+          onPress: performDelete,
         },
-      },
-    ]);
+      ]);
+    }
   };
 
   const getStatusColor = (status: TicketStatus) => TICKET_STATUSES.find(s => s.value === status)?.color || '#666';
@@ -163,140 +179,144 @@ export default function TicketDetailScreen({ user }: TicketDetailScreenProps) {
   const statusTextColor = isColorLight(statusColor) ? '#000' : '#FFF';
   const priorityTextColor = isColorLight(priorityColor) ? '#000' : '#FFF';
 
+  // Componente para la cabecera de la lista (Info del Ticket)
+  const renderHeader = () => (
+    <View>
+      <Surface style={styles.header}>
+        <View style={styles.headerContent}>
+          <View style={styles.titleContainer}>
+            <Title style={styles.title}>{ticket.title}</Title>
+            <View style={styles.metaContainer}>
+              <Chip icon={() => <MaterialCommunityIcons name={getCategoryIcon(ticket.category)} size={16} color={categoryTextColor} />} style={[styles.categoryChip, { backgroundColor: categoryColor }]} textStyle={[styles.chipText, { color: categoryTextColor }]} compact>{TICKET_CATEGORIES.find(c => c.value === ticket.category)?.label}</Chip>
+              <Chip style={[styles.statusChip, { backgroundColor: statusColor }]} textStyle={[styles.chipText, { color: statusTextColor }]} compact>{TICKET_STATUSES.find(s => s.value === ticket.status)?.label}</Chip>
+              <Chip style={[styles.priorityChip, { backgroundColor: priorityColor }]} textStyle={[styles.chipText, { color: priorityTextColor }]} compact>{ticket.priority.toUpperCase()}</Chip>
+            </View>
+          </View>
+          {user?.role === 'admin' && (
+            <View>
+              <Menu
+                visible={adminMenuVisible}
+                onDismiss={() => setAdminMenuVisible(false)}
+                anchor={<IconButton icon="cog-outline" iconColor="#2E7D32" size={24} onPress={() => setAdminMenuVisible(true)} />}
+              >
+                <Menu.Item onPress={() => {}} title="Acciones" disabled />
+                <Divider />
+                {ticket.status !== 'resolved' && <Menu.Item leadingIcon="check" onPress={() => handleUpdate({ status: 'resolved' })} title="Resolver" />}
+                {ticket.status !== 'in_progress' && <Menu.Item leadingIcon="play" onPress={() => handleUpdate({ status: 'in_progress' })} title="En Progreso" />}
+                <Divider />
+                <Menu.Item title="Prioridad" disabled />
+                <Menu.Item leadingIcon="arrow-down" onPress={() => handleUpdate({ priority: 'low' })} title="Baja" />
+                <Menu.Item leadingIcon="minus" onPress={() => handleUpdate({ priority: 'medium' })} title="Media" />
+                <Menu.Item leadingIcon="arrow-up" onPress={() => handleUpdate({ priority: 'high' })} title="Alta" />
+                <Divider />
+                <Menu.Item leadingIcon="trash-can-outline" onPress={handleDelete} title="Eliminar Ticket" titleStyle={{color: '#B00020'}} />
+              </Menu>
+            </View>
+          )}
+        </View>
+      </Surface>
+
+      <Card style={styles.card}>
+        <Card.Content>
+          <Title style={styles.sectionTitle}>Descripción</Title>
+          <Paragraph style={styles.description}>{ticket.description}</Paragraph>
+          <Divider style={styles.divider} />
+          <Title style={styles.sectionTitle}>Información</Title>
+          <View style={styles.infoGrid}>
+            <View style={styles.infoItem}><MaterialCommunityIcons name="map-marker-outline" size={16} color="#666" /><Text style={styles.infoLabel}>Ubicación:</Text><Text style={styles.infoValue}>{ticket.location || 'No especificada'}</Text></View>
+            <View style={styles.infoItem}><MaterialCommunityIcons name="calendar-outline" size={16} color="#666" /><Text style={styles.infoLabel}>Creado:</Text><Text style={styles.infoValue}>{formatDate(ticket.createdAt)}</Text></View>
+            <View style={styles.infoItem}><MaterialCommunityIcons name="account-outline" size={16} color="#666" /><Text style={styles.infoLabel}>Creado por:</Text><Text style={styles.infoValue}>{ticket.createdByName}</Text></View>
+          </View>
+        </Card.Content>
+      </Card>
+
+      <View style={styles.commentsTitleContainer}>
+        <Title style={[styles.sectionTitle, { marginLeft: 16, marginTop: 8 }]}>Comentarios ({comments.length})</Title>
+      </View>
+      
+      {comments.length === 0 && (
+        <View style={styles.emptyComments}>
+          <MaterialCommunityIcons name="comment-multiple-outline" size={32} color="#ccc" />
+          <Text style={styles.emptyCommentsText}>No hay comentarios</Text>
+        </View>
+      )}
+    </View>
+  );
+
+  // Renderizado de cada comentario (Item de la lista)
+  const renderCommentItem = ({ item }: { item: Comment }) => (
+    <Card style={[styles.card, styles.commentCard]}>
+      <Card.Content>
+        <View style={styles.commentHeader}>
+          <Avatar.Text size={32} label={item.userName.charAt(0)} />
+          <View style={styles.commentInfo}>
+            <Text style={styles.commentAuthor}>{item.userName}</Text>
+            <Text style={styles.commentDate}>{formatDate(item.createdAt)}</Text>
+          </View>
+        </View>
+        <Paragraph style={styles.commentContent}>{item.content}</Paragraph>
+      </Card.Content>
+    </Card>
+  );
+
+  // Componente para el pie de la lista (Input de nuevo comentario)
+  const renderFooter = () => (
+    <Card style={styles.card}>
+      <Card.Content>
+        <View style={styles.addCommentContainer}>
+          <TextInput 
+            label="Agregar comentario" 
+            value={newComment} 
+            onChangeText={setNewComment} 
+            mode="outlined" 
+            multiline 
+            numberOfLines={3} 
+            style={styles.commentInput} 
+          />
+          <Button 
+            mode="contained" 
+            onPress={handleAddComment} 
+            loading={isAddingComment} 
+            disabled={!newComment.trim() || isAddingComment} 
+            style={styles.addCommentButton}
+          >
+            Agregar
+          </Button>
+        </View>
+      </Card.Content>
+    </Card>
+  );
+
   return (
     <View style={styles.container}>
-      <ScrollView 
-        style={styles.scrollView} 
-        contentContainerStyle={styles.scrollContent}
-      >
-        <Surface style={styles.header}>
-          <View style={styles.headerContent}>
-            {/* Contenedor del Título y Chips */}
-            <View style={styles.titleContainer}>
-              <Title style={styles.title}>{ticket.title}</Title>
-              <View style={styles.metaContainer}>
-                <Chip 
-                  icon={() => <MaterialCommunityIcons name={getCategoryIcon(ticket.category)} size={16} color={categoryTextColor} />} 
-                  style={[styles.categoryChip, { backgroundColor: categoryColor }]}
-                  textStyle={[styles.chipText, { color: categoryTextColor }]}
-                  compact
-                >
-                  {TICKET_CATEGORIES.find(c => c.value === ticket.category)?.label}
-                </Chip>
-                <Chip 
-                  style={[styles.statusChip, { backgroundColor: statusColor }]}
-                  textStyle={[styles.chipText, { color: statusTextColor }]}
-                  compact
-                >
-                  {TICKET_STATUSES.find(s => s.value === ticket.status)?.label}
-                </Chip>
-                <Chip 
-                  style={[styles.priorityChip, { backgroundColor: priorityColor }]}
-                  textStyle={[styles.chipText, { color: priorityTextColor }]}
-                  compact
-                >
-                  {ticket.priority.toUpperCase()}
-                </Chip>
-              </View>
-            </View>
-
-            {/* Menú de Administrador en la parte superior derecha */}
-            {user?.role === 'admin' && (
-              <View>
-                <Menu
-                  visible={adminMenuVisible}
-                  onDismiss={() => setAdminMenuVisible(false)}
-                  anchor={
-                    <IconButton
-                      icon="cog-outline"
-                      iconColor="#2E7D32"
-                      size={24}
-                      onPress={() => setAdminMenuVisible(true)}
-                    />
-                  }
-                >
-                  <Menu.Item onPress={() => {}} title="Acciones" disabled />
-                  <Divider />
-                  {ticket.status !== 'resolved' && (
-                     <Menu.Item leadingIcon="check" onPress={() => handleUpdate({ status: 'resolved' })} title="Resolver" />
-                  )}
-                  {ticket.status !== 'in_progress' && (
-                     <Menu.Item leadingIcon="play" onPress={() => handleUpdate({ status: 'in_progress' })} title="En Progreso" />
-                  )}
-                  <Divider />
-                  <Menu.Item title="Prioridad" disabled />
-                  <Menu.Item leadingIcon="arrow-down" onPress={() => handleUpdate({ priority: 'low' })} title="Baja" />
-                  <Menu.Item leadingIcon="minus" onPress={() => handleUpdate({ priority: 'medium' })} title="Media" />
-                  <Menu.Item leadingIcon="arrow-up" onPress={() => handleUpdate({ priority: 'high' })} title="Alta" />
-                  <Divider />
-                  <Menu.Item leadingIcon="trash-can-outline" onPress={handleDelete} title="Eliminar Ticket" titleStyle={{color: '#B00020'}} />
-                </Menu>
-              </View>
-            )}
-          </View>
-        </Surface>
-
-        <Card style={styles.card}>
-          <Card.Content>
-            <Title style={styles.sectionTitle}>Descripción</Title>
-            <Paragraph style={styles.description}>{ticket.description}</Paragraph>
-            <Divider style={styles.divider} />
-            <Title style={styles.sectionTitle}>Información</Title>
-            <View style={styles.infoGrid}>
-              <View style={styles.infoItem}><MaterialCommunityIcons name="map-marker-outline" size={16} color="#666" /><Text style={styles.infoLabel}>Ubicación:</Text><Text style={styles.infoValue}>{ticket.location || 'No especificada'}</Text></View>
-              <View style={styles.infoItem}><MaterialCommunityIcons name="calendar-outline" size={16} color="#666" /><Text style={styles.infoLabel}>Creado:</Text><Text style={styles.infoValue}>{formatDate(ticket.createdAt)}</Text></View>
-              <View style={styles.infoItem}><MaterialCommunityIcons name="account-outline" size={16} color="#666" /><Text style={styles.infoLabel}>Creado por:</Text><Text style={styles.infoValue}>{ticket.createdByName}</Text></View>
-            </View>
-          </Card.Content>
-        </Card>
-
-        <Card style={styles.card}>
-          <Card.Content>
-            <Title style={styles.sectionTitle}>Comentarios ({comments.length})</Title>
-            {comments.length === 0 ? <View style={styles.emptyComments}><MaterialCommunityIcons name="comment-multiple-outline" size={32} color="#ccc" /><Text style={styles.emptyCommentsText}>No hay comentarios</Text></View> : comments.map(c => (
-              <View key={c.id} style={styles.commentItem}>
-                <View style={styles.commentHeader}><Avatar.Text size={32} label={c.userName.charAt(0)} /><View style={styles.commentInfo}><Text style={styles.commentAuthor}>{c.userName}</Text><Text style={styles.commentDate}>{formatDate(c.createdAt)}</Text></View></View>
-                <Paragraph style={styles.commentContent}>{c.content}</Paragraph>
-              </View>
-            ))}
-            <Divider style={styles.divider} />
-            <View style={styles.addCommentContainer}>
-              <TextInput label="Agregar comentario" value={newComment} onChangeText={setNewComment} mode="outlined" multiline numberOfLines={3} style={styles.commentInput} />
-              <Button mode="contained" onPress={handleAddComment} loading={isAddingComment} disabled={!newComment.trim() || isAddingComment} style={styles.addCommentButton}>Agregar</Button>
-            </View>
-          </Card.Content>
-        </Card>
-
-        {/* Se ha eliminado el bloque de acciones inferior para solucionar el scroll */}
-      </ScrollView>
+      <FlatList
+        data={comments}
+        keyExtractor={(item) => item.id}
+        renderItem={renderCommentItem}
+        ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderFooter}
+        contentContainerStyle={styles.listContent}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-    container: { 
-        flex: 1, 
-        backgroundColor: '#F5F5F5',
-    },
-    scrollView: { 
-        flex: 1,
-    },
-    scrollContent: { 
-        paddingBottom: 40, 
-        flexGrow: 1 
-    },
+    container: { flex: 1, backgroundColor: '#F5F5F5' },
+    listContent: { paddingBottom: 40, flexGrow: 1 },
     loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F5F5F5' },
     loadingText: { fontSize: 16, color: '#666', marginTop: 16 },
     header: { backgroundColor: 'white', padding: 16, elevation: 2 },
     headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-    titleContainer: { flex: 1, marginRight: 10 }, // Asegura que el título no se monte sobre el botón
+    titleContainer: { flex: 1, marginRight: 10 },
     title: { fontSize: 22, fontWeight: 'bold', color: '#333', marginBottom: 12 },
     metaContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     categoryChip: { justifyContent: 'center', alignItems: 'center' },
     statusChip: { justifyContent: 'center', alignItems: 'center' },
     priorityChip: { justifyContent: 'center', alignItems: 'center' },
     chipText: { fontSize: 10, fontWeight: 'bold' },
-    card: { margin: 16, marginTop: 8, elevation: 1 },
+    card: { marginHorizontal: 16, marginVertical: 8, elevation: 1, backgroundColor: 'white' },
+    commentCard: { marginTop: 4, marginBottom: 4 },
     sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#2E7D32', marginBottom: 12 },
     description: { fontSize: 16, lineHeight: 24, color: '#333' },
     divider: { marginVertical: 16 },
@@ -304,19 +324,15 @@ const styles = StyleSheet.create({
     infoItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     infoLabel: { fontSize: 14, color: '#666', fontWeight: '500' },
     infoValue: { fontSize: 14, color: '#333', flex: 1 },
-    emptyComments: { alignItems: 'center', padding: 32 },
+    commentsTitleContainer: { marginTop: 8 },
+    emptyComments: { alignItems: 'center', padding: 20 },
     emptyCommentsText: { fontSize: 16, color: '#666', marginTop: 8 },
-    commentItem: { marginBottom: 16, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: '#E0E0E0' },
     commentHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
     commentInfo: { flex: 1, marginLeft: 12 },
     commentAuthor: { fontSize: 14, fontWeight: 'bold', color: '#333' },
     commentDate: { fontSize: 12, color: '#666' },
     commentContent: { fontSize: 14, color: '#333', lineHeight: 20, marginLeft: 44 },
-    addCommentContainer: { marginTop: 16 },
+    addCommentContainer: { },
     commentInput: { marginBottom: 12 },
     addCommentButton: { backgroundColor: '#2E7D32' },
-    actionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-    actionButton: { paddingHorizontal: 12 },
-    deleteButton: { borderColor: '#B00020' },
-    cardTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 12 },
 });
