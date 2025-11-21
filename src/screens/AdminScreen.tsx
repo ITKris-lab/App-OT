@@ -17,8 +17,11 @@ import {
   DataTable,
   Searchbar,
   FAB,
+  Button, // Importamos Button
+  Paragraph, // Importamos Paragraph
 } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native'; // Importar navegación
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Ticket, User, TicketStatus, TicketCategory } from '../types';
@@ -42,10 +45,10 @@ const TICKET_STATUSES: { value: TicketStatus; label: string; color: string }[] =
 ];
 
 export default function AdminScreen() {
+  const navigation = useNavigation(); // Hook de navegación
   const [allTickets, setAllTickets] = useState<Ticket[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [filteredTickets, setFilteredTickets] = useState<Ticket[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTab, setSelectedTab] = useState<'overview' | 'tickets' | 'users'>('overview');
   const [isLoading, setIsLoading] = useState(true);
@@ -64,7 +67,6 @@ export default function AdminScreen() {
     const unsubUsers = onSnapshot(usersQuery, snapshot => {
       const usersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: doc.data().createdAt?.toDate() ?? new Date() } as User));
       setAllUsers(usersData);
-      setFilteredUsers(usersData);
       checkLoading();
     });
 
@@ -82,15 +84,11 @@ export default function AdminScreen() {
     const lowercasedQuery = searchQuery.toLowerCase();
     if (selectedTab === 'tickets') {
       setFilteredTickets(allTickets.filter(t => t.title.toLowerCase().includes(lowercasedQuery) || t.id.toLowerCase().includes(lowercasedQuery)));
-    } else if (selectedTab === 'users') {
-      setFilteredUsers(allUsers.filter(u => u.name.toLowerCase().includes(lowercasedQuery) || u.sector?.toLowerCase().includes(lowercasedQuery)));
     }
-  }, [searchQuery, selectedTab, allTickets, allUsers]);
+  }, [searchQuery, selectedTab, allTickets]);
 
   const getStatusColor = (status: TicketStatus) => TICKET_STATUSES.find(s => s.value === status)?.color || '#666';
-  const getRoleDisplayName = (role: User['role']) => ({ admin: 'Admin', patient: 'Paciente' }[role] || 'Usuario');
-  const getRoleIcon = (role: User['role']) => ({ admin: 'shield-checkmark', patient: 'person' }[role] || 'help-circle');
-
+  
   const renderOverview = () => (
     <View style={styles.tabContent}>
       <Card style={styles.card}>
@@ -121,7 +119,7 @@ export default function AdminScreen() {
         <DataTable>
           <DataTable.Header><DataTable.Title>ID</DataTable.Title><DataTable.Title>Título</DataTable.Title><DataTable.Title>Estado</DataTable.Title></DataTable.Header>
           {filteredTickets.map(ticket => (
-            <DataTable.Row key={ticket.id}>
+            <DataTable.Row key={ticket.id} onPress={() => navigation.navigate('TicketDetail' as never, { ticketId: ticket.id } as never)}>
               <DataTable.Cell><Text style={styles.idCellText}>{`...${ticket.id.slice(-5)}`}</Text></DataTable.Cell>
               <DataTable.Cell><Text numberOfLines={1} style={styles.cellText}>{ticket.title}</Text></DataTable.Cell>
               <DataTable.Cell><Chip style={[styles.statusChip, { backgroundColor: getStatusColor(ticket.status) }]} textStyle={styles.chipText}>{TICKET_STATUSES.find(s => s.value === ticket.status)?.label}</Chip></DataTable.Cell>
@@ -134,19 +132,38 @@ export default function AdminScreen() {
 
   const renderUsers = () => (
     <View style={styles.tabContent}>
-      <Searchbar placeholder="Buscar por nombre o sector..." onChangeText={setSearchQuery} value={searchQuery} style={styles.searchbar} elevation={Platform.OS === 'android' ? 1 : 0} />
       <Card style={styles.card}>
-        <DataTable>
-          <DataTable.Header><DataTable.Title>Usuario</DataTable.Title><DataTable.Title>Sector</DataTable.Title><DataTable.Title>Rol</DataTable.Title></DataTable.Header>
-          {filteredUsers.map(u => (
-            <DataTable.Row key={u.id}>
-              <DataTable.Cell><View style={styles.userCell}><Ionicons name={getRoleIcon(u.role)} size={20} color="#666" /><Text style={styles.cellText}>{u.name}</Text></View></DataTable.Cell>
-              <DataTable.Cell><Text style={styles.cellText}>{u.sector}</Text></DataTable.Cell>
-              <DataTable.Cell><Chip style={[styles.roleChip, { backgroundColor: u.role === 'admin' ? '#1B5E20' : '#666' }]} textStyle={styles.chipText}>{getRoleDisplayName(u.role)}</Chip></DataTable.Cell>
-            </DataTable.Row>
-          ))}
-        </DataTable>
+        <Card.Content style={{ alignItems: 'center', padding: 20 }}>
+          <Ionicons name="people-circle-outline" size={64} color="#2E7D32" />
+          <Title style={{ marginTop: 16 }}>Gestión de Usuarios</Title>
+          <Paragraph style={{ textAlign: 'center', marginBottom: 20, color: '#666' }}>
+            Accede a la herramienta completa para crear, editar y eliminar usuarios del sistema.
+          </Paragraph>
+          <Button 
+            mode="contained" 
+            onPress={() => navigation.navigate('AdminUsers' as never)} 
+            style={{ backgroundColor: '#2E7D32', width: '100%' }}
+            icon="account-cog"
+          >
+            Ir a Gestión de Usuarios
+          </Button>
+        </Card.Content>
       </Card>
+
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, marginTop: 10 }}>
+         <Card style={[styles.card, { flex: 0.48 }]}>
+            <Card.Content style={{ alignItems: 'center' }}>
+                <Title style={{ fontSize: 24, color: '#2E7D32' }}>{allUsers.length}</Title>
+                <Paragraph style={{ fontSize: 12 }}>Total Usuarios</Paragraph>
+            </Card.Content>
+         </Card>
+         <Card style={[styles.card, { flex: 0.48 }]}>
+            <Card.Content style={{ alignItems: 'center' }}>
+                <Title style={{ fontSize: 24, color: '#1B5E20' }}>{allUsers.filter(u => u.role === 'admin').length}</Title>
+                <Paragraph style={{ fontSize: 12 }}>Administradores</Paragraph>
+            </Card.Content>
+         </Card>
+      </View>
     </View>
   );
 
@@ -172,8 +189,6 @@ export default function AdminScreen() {
       </Surface>
 
       <ScrollView style={styles.scrollView}>{renderContent()}</ScrollView>
-
-      <FAB style={styles.fab} icon="cog-outline" onPress={() => {}} label="Ajustes" />
     </View>
   );
 }

@@ -20,6 +20,7 @@ import TicketListScreen from './src/screens/TicketListScreen';
 import TicketDetailScreen from './src/screens/TicketDetailScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import AdminScreen from './src/screens/AdminScreen';
+import AdminUsersScreen from './src/screens/AdminUsersScreen'; // Importar la nueva pantalla
 
 // Types
 import { User } from './src/types';
@@ -152,11 +153,18 @@ export default function App() {
                 {(props) => <TicketDetailScreen {...props} user={user} />}
             </Stack.Screen>
             {user.role === 'admin' && (
-              <Stack.Screen 
-                name="Admin" 
-                component={AdminScreen}
-                options={{ title: 'Administración' }}
-              />
+              <>
+                <Stack.Screen 
+                  name="Admin" 
+                  component={AdminScreen}
+                  options={{ title: 'Administración' }}
+                />
+                <Stack.Screen 
+                  name="AdminUsers" 
+                  component={AdminUsersScreen}
+                  options={{ title: 'Gestionar Usuarios' }}
+                />
+              </>
             )}
           </Stack.Navigator>
         ) : (

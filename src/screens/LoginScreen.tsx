@@ -31,6 +31,7 @@ const HOSPITAL_INFO = {
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // Estado para mostrar/ocultar contraseña
   const [isLoading, setIsLoading] = useState(false);
 
   const handleAuthentication = async () => {
@@ -92,9 +93,15 @@ export default function LoginScreen() {
               value={password}
               onChangeText={setPassword}
               mode="outlined"
-              secureTextEntry
+              secureTextEntry={!showPassword} // Depende del estado
               style={styles.input}
               left={<TextInput.Icon icon="lock" />}
+              right={
+                <TextInput.Icon 
+                  icon={showPassword ? "eye-off" : "eye"} 
+                  onPress={() => setShowPassword(!showPassword)} 
+                />
+              }
             />
 
             <Button
