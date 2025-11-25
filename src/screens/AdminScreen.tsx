@@ -4,27 +4,21 @@ import {
   View,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
 import {
   Card,
   Title,
   Text,
   Surface,
-  Chip,
-  DataTable,
-  Searchbar,
-  FAB,
-  Button, // Importamos Button
-  Paragraph, // Importamos Paragraph
+  Paragraph,
+  Button,
 } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native'; // Importar navegación
+import { useNavigation } from '@react-navigation/native';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { Ticket, User, TicketStatus, TicketCategory } from '../types';
+import { Ticket, User, TicketCategory } from '../types';
 
 // Constantes
 const TICKET_CATEGORIES: { value: TicketCategory; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
@@ -36,21 +30,10 @@ const TICKET_CATEGORIES: { value: TicketCategory; label: string; icon: keyof typ
   { value: 'other', label: 'Otro', icon: 'help-circle-outline' },
 ];
 
-const TICKET_STATUSES: { value: TicketStatus; label: string; color: string }[] = [
-  { value: 'open', label: 'Abierto', color: '#2196F3' },
-  { value: 'in_progress', label: 'En Progreso', color: '#FF9800' },
-  { value: 'pending', label: 'Pendiente', color: '#9C27B0' },
-  { value: 'resolved', label: 'Resuelto', color: '#1B5E20' }, // Color mejorado
-  { value: 'closed', label: 'Cerrado', color: '#607D8B' },
-];
-
 export default function AdminScreen() {
-  const navigation = useNavigation(); // Hook de navegación
+  const navigation = useNavigation();
   const [allTickets, setAllTickets] = useState<Ticket[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
-  const [filteredTickets, setFilteredTickets] = useState<Ticket[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTab, setSelectedTab] = useState<'overview' | 'tickets' | 'users'>('overview');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -60,7 +43,6 @@ export default function AdminScreen() {
     const unsubTickets = onSnapshot(ticketsQuery, snapshot => {
       const ticketsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: doc.data().createdAt?.toDate() ?? new Date() } as Ticket));
       setAllTickets(ticketsData);
-      setFilteredTickets(ticketsData);
       checkLoading();
     });
 
@@ -72,154 +54,115 @@ export default function AdminScreen() {
 
     let loaded = { tickets: false, users: false };
     const checkLoading = () => {
-      if (selectedTab === 'overview' && !loaded.tickets) loaded.tickets = true;
-      if (selectedTab === 'overview' && !loaded.users) loaded.users = true;
-      if (loaded.tickets && loaded.users) setIsLoading(false);
+      // Simulación simple de carga
+      setIsLoading(false);
     }
 
     return () => { unsubTickets(); unsubUsers(); };
   }, []);
 
-  useEffect(() => {
-    const lowercasedQuery = searchQuery.toLowerCase();
-    if (selectedTab === 'tickets') {
-      setFilteredTickets(allTickets.filter(t => t.title.toLowerCase().includes(lowercasedQuery) || t.id.toLowerCase().includes(lowercasedQuery)));
-    }
-  }, [searchQuery, selectedTab, allTickets]);
-
-  const getStatusColor = (status: TicketStatus) => TICKET_STATUSES.find(s => s.value === status)?.color || '#666';
-  
-  const renderOverview = () => (
-    <View style={styles.tabContent}>
-      <Card style={styles.card}>
-        <Card.Content>
-          <Title style={styles.cardTitle}>Tickets por Categoría</Title>
-          {TICKET_CATEGORIES.map(category => {
-            const count = allTickets.filter(t => t.category === category.value).length;
-            if (count === 0) return null;
-            return (
-              <View key={category.value} style={styles.categoryRow}>
-                <View style={styles.categoryInfo}>
-                  <Ionicons name={category.icon as any} size={20} color="#666" />
-                  <Text style={styles.categoryLabel}>{category.label}</Text>
-                </View>
-                <Text style={styles.categoryCount}>{count}</Text>
-              </View>
-            );
-          })}
-        </Card.Content>
-      </Card>
-    </View>
-  );
-
-  const renderTickets = () => (
-    <View style={styles.tabContent}>
-      <Searchbar placeholder="Buscar por ID o título..." onChangeText={setSearchQuery} value={searchQuery} style={styles.searchbar} elevation={Platform.OS === 'android' ? 1 : 0} />
-      <Card style={styles.card}>
-        <DataTable>
-          <DataTable.Header><DataTable.Title>ID</DataTable.Title><DataTable.Title>Título</DataTable.Title><DataTable.Title>Estado</DataTable.Title></DataTable.Header>
-          {filteredTickets.map(ticket => (
-            <DataTable.Row key={ticket.id} onPress={() => navigation.navigate('TicketDetail' as never, { ticketId: ticket.id } as never)}>
-              <DataTable.Cell><Text style={styles.idCellText}>{`...${ticket.id.slice(-5)}`}</Text></DataTable.Cell>
-              <DataTable.Cell><Text numberOfLines={1} style={styles.cellText}>{ticket.title}</Text></DataTable.Cell>
-              <DataTable.Cell><Chip style={[styles.statusChip, { backgroundColor: getStatusColor(ticket.status) }]} textStyle={styles.chipText}>{TICKET_STATUSES.find(s => s.value === ticket.status)?.label}</Chip></DataTable.Cell>
-            </DataTable.Row>
-          ))}
-        </DataTable>
-      </Card>
-    </View>
-  );
-
-  const renderUsers = () => (
-    <View style={styles.tabContent}>
-      <Card style={styles.card}>
-        <Card.Content style={{ alignItems: 'center', padding: 20 }}>
-          <Ionicons name="people-circle-outline" size={64} color="#2E7D32" />
-          <Title style={{ marginTop: 16 }}>Gestión de Usuarios</Title>
-          <Paragraph style={{ textAlign: 'center', marginBottom: 20, color: '#666' }}>
-            Accede a la herramienta completa para crear, editar y eliminar usuarios del sistema.
-          </Paragraph>
-          <Button 
-            mode="contained" 
-            onPress={() => navigation.navigate('AdminUsers' as never)} 
-            style={{ backgroundColor: '#2E7D32', width: '100%' }}
-            icon="account-cog"
-          >
-            Ir a Gestión de Usuarios
-          </Button>
-        </Card.Content>
-      </Card>
-
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, marginTop: 10 }}>
-         <Card style={[styles.card, { flex: 0.48 }]}>
-            <Card.Content style={{ alignItems: 'center' }}>
-                <Title style={{ fontSize: 24, color: '#2E7D32' }}>{allUsers.length}</Title>
-                <Paragraph style={{ fontSize: 12 }}>Total Usuarios</Paragraph>
-            </Card.Content>
-         </Card>
-         <Card style={[styles.card, { flex: 0.48 }]}>
-            <Card.Content style={{ alignItems: 'center' }}>
-                <Title style={{ fontSize: 24, color: '#1B5E20' }}>{allUsers.filter(u => u.role === 'admin').length}</Title>
-                <Paragraph style={{ fontSize: 12 }}>Administradores</Paragraph>
-            </Card.Content>
-         </Card>
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2E7D32" />
       </View>
-    </View>
-  );
-
-  const renderContent = () => {
-    if (isLoading) return <ActivityIndicator animating={true} color={'#2E7D32'} style={{ marginTop: 50 }} />;
-    switch (selectedTab) {
-        case 'overview': return renderOverview();
-        case 'tickets': return renderTickets();
-        case 'users': return renderUsers();
-        default: return null;
-    }
-  };
+    );
+  }
 
   return (
     <View style={styles.container}>
       <Surface style={styles.header}>
         <Title style={styles.headerTitle}>Panel de Administración</Title>
-        <View style={styles.tabContainer}>
-            <TouchableOpacity style={[styles.tab, selectedTab === 'overview' && styles.tabActive]} onPress={() => setSelectedTab('overview')}><Ionicons name="stats-chart-outline" size={20} color={selectedTab === 'overview' ? 'white' : '#666'} /><Text style={[styles.tabText, selectedTab === 'overview' && styles.tabTextActive]}>Resumen</Text></TouchableOpacity>
-            <TouchableOpacity style={[styles.tab, selectedTab === 'tickets' && styles.tabActive]} onPress={() => setSelectedTab('tickets')}><Ionicons name="ticket-outline" size={20} color={selectedTab === 'tickets' ? 'white' : '#666'} /><Text style={[styles.tabText, selectedTab === 'tickets' && styles.tabTextActive]}>Tickets</Text></TouchableOpacity>
-            <TouchableOpacity style={[styles.tab, selectedTab === 'users' && styles.tabActive]} onPress={() => setSelectedTab('users')}><Ionicons name="people-outline" size={20} color={selectedTab === 'users' ? 'white' : '#666'} /><Text style={[styles.tabText, selectedTab === 'users' && styles.tabTextActive]}>Usuarios</Text></TouchableOpacity>
-        </View>
       </Surface>
 
-      <ScrollView style={styles.scrollView}>{renderContent()}</ScrollView>
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.content}>
+          
+          {/* Tarjeta Principal: Gestión de Usuarios */}
+          <Card style={[styles.card, styles.mainActionCard]}>
+            <Card.Content style={{ alignItems: 'center', padding: 20 }}>
+              <Ionicons name="people-circle-outline" size={64} color="#2E7D32" />
+              <Title style={{ marginTop: 16 }}>Gestión de Usuarios</Title>
+              <Paragraph style={{ textAlign: 'center', marginBottom: 20, color: '#666' }}>
+                Administrar cuentas, roles y sectores del personal.
+              </Paragraph>
+              <Button 
+                mode="contained" 
+                onPress={() => navigation.navigate('AdminUsers' as never)} 
+                style={{ backgroundColor: '#2E7D32', width: '100%' }}
+                icon="account-cog"
+              >
+                Ir a Gestión de Usuarios
+              </Button>
+            </Card.Content>
+          </Card>
+
+          {/* Estadísticas Rápidas */}
+          <View style={styles.statsRow}>
+             <Card style={[styles.card, styles.statCard]}>
+                <Card.Content style={{ alignItems: 'center' }}>
+                    <Title style={styles.statNumber}>{allUsers.length}</Title>
+                    <Paragraph style={styles.statLabel}>Usuarios</Paragraph>
+                </Card.Content>
+             </Card>
+             <Card style={[styles.card, styles.statCard]}>
+                <Card.Content style={{ alignItems: 'center' }}>
+                    <Title style={styles.statNumber}>{allTickets.length}</Title>
+                    <Paragraph style={styles.statLabel}>Tickets Totales</Paragraph>
+                </Card.Content>
+             </Card>
+             <Card style={[styles.card, styles.statCard]}>
+                <Card.Content style={{ alignItems: 'center' }}>
+                    <Title style={[styles.statNumber, {color: '#F44336'}]}>
+                        {allTickets.filter(t => t.status === 'open').length}
+                    </Title>
+                    <Paragraph style={styles.statLabel}>Abiertos</Paragraph>
+                </Card.Content>
+             </Card>
+          </View>
+
+          {/* Resumen de Tickets por Categoría */}
+          <Card style={styles.card}>
+            <Card.Content>
+              <Title style={styles.cardTitle}>Tickets por Categoría</Title>
+              {TICKET_CATEGORIES.map(category => {
+                const count = allTickets.filter(t => t.category === category.value).length;
+                if (count === 0) return null;
+                return (
+                  <View key={category.value} style={styles.categoryRow}>
+                    <View style={styles.categoryInfo}>
+                      <Ionicons name={category.icon as any} size={20} color="#666" />
+                      <Text style={styles.categoryLabel}>{category.label}</Text>
+                    </View>
+                    <Text style={styles.categoryCount}>{count}</Text>
+                  </View>
+                );
+              })}
+            </Card.Content>
+          </Card>
+
+        </View>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F5F5' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { backgroundColor: 'white', padding: 16, elevation: 4 },
-  headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#2E7D32', marginBottom: 16 },
-  tabContainer: { flexDirection: 'row', backgroundColor: '#E0E0E0', borderRadius: 8, padding: 4 },
-  tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: 6, gap: 6 },
-  tabActive: { backgroundColor: '#2E7D32' },
-  tabText: { fontSize: 14, color: '#333' },
-  tabTextActive: { color: 'white', fontWeight: 'bold' },
+  headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#2E7D32' },
   scrollView: { flex: 1 },
-  tabContent: { padding: 16 },
-  searchbar: { marginBottom: 16 },
-  card: { marginBottom: 16, elevation: 1, borderWidth: 1, borderColor: '#E0E0E0' },
+  content: { padding: 16 },
+  card: { marginBottom: 16, elevation: 2, backgroundColor: 'white' },
+  mainActionCard: { borderLeftWidth: 4, borderLeftColor: '#2E7D32' },
+  statsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
+  statCard: { flex: 1 },
+  statNumber: { fontSize: 24, fontWeight: 'bold', color: '#333' },
+  statLabel: { fontSize: 12, color: '#666' },
   cardTitle: { fontSize: 18, fontWeight: 'bold', color: '#2E7D32', marginBottom: 16 },
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around' },
-  statItem: { minWidth: '45%', alignItems: 'center', marginBottom: 16 },
-  statNumber: { fontSize: 28, fontWeight: 'bold', color: '#333', marginTop: 8 },
-  statLabel: { fontSize: 12, color: '#666', marginTop: 4, textAlign: 'center' },
-  categoryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
+  categoryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
   categoryInfo: { flexDirection: 'row', alignItems: 'center' },
   categoryLabel: { fontSize: 14, color: '#333', marginLeft: 12 },
   categoryCount: { fontSize: 16, fontWeight: 'bold', color: '#333' },
-  idCellText: { fontSize: 10, color: '#666', fontFamily: 'monospace' },
-  cellText: { fontSize: 12, color: '#333' },
-  userCell: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  statusChip: { height: 22, justifyContent: 'center' },
-  roleChip: { height: 22, justifyContent: 'center' },
-  chipText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
-  fab: { position: 'absolute', margin: 16, right: 0, bottom: 0, backgroundColor: '#2E7D32' },
 });

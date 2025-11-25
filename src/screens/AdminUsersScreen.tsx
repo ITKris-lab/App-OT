@@ -6,14 +6,13 @@ import {
   FlatList,
   Alert,
   Platform,
-  KeyboardAvoidingView,
   ScrollView,
 } from 'react-native';
 import {
   Text,
   Card,
   Title,
-  Paragraph, // AÑADIDO: Importación faltante
+  Paragraph,
   Button,
   FAB,
   Searchbar,
@@ -24,10 +23,8 @@ import {
   Surface,
   IconButton,
   Chip,
-  Divider,
 } from 'react-native-paper';
-import { Ionicons } from '@expo/vector-icons';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { User } from '../types';
 
@@ -38,9 +35,11 @@ export default function AdminUsersScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [currentUser, setCurrentUser] = useState<Partial<User> | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
   // Estados para el formulario
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [sector, setSector] = useState('');
   const [role, setRole] = useState<'admin' | 'patient'>('patient');
 
@@ -72,9 +71,21 @@ export default function AdminUsersScreen() {
     }
   }, [searchQuery, users]);
 
+  const openCreateModal = () => {
+    setIsCreating(true);
+    setCurrentUser(null);
+    setName('');
+    setEmail('');
+    setSector('');
+    setRole('patient');
+    setModalVisible(true);
+  };
+
   const openEditModal = (user: User) => {
+    setIsCreating(false);
     setCurrentUser(user);
     setName(user.name);
+    setEmail(user.email); // Solo lectura en edición
     setSector(user.sector || '');
     setRole(user.role);
     setModalVisible(true);
@@ -84,8 +95,10 @@ export default function AdminUsersScreen() {
     setModalVisible(false);
     setCurrentUser(null);
     setName('');
+    setEmail('');
     setSector('');
     setRole('patient');
+    setIsCreating(false);
   };
 
   const handleSave = async () => {
@@ -94,10 +107,36 @@ export default function AdminUsersScreen() {
       return;
     }
 
+    if (isCreating && !email.trim()) {
+      Alert.alert('Error', 'El correo electrónico es obligatorio para nuevos usuarios');
+      return;
+    }
+
     setLoading(true);
     try {
-      if (currentUser && currentUser.id) {
-        // Editar usuario existente
+      if (isCreating) {
+        // CREAR USUARIO (Solo perfil en Firestore)
+        // Generamos un ID basado en el email para mantener consistencia o dejamos que Firestore genere uno
+        // Lo ideal es usar el UID de Auth, pero como no lo tenemos, usaremos el email como ID temporal o un auto-ID.
+        // Vamos a usar un ID automático de Firestore, pero guardaremos el email.
+        
+        const newUserRef = doc(collection(db, 'users')); // ID automático
+        await setDoc(newUserRef, {
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          sector: sector.trim(),
+          role: role,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+
+        Alert.alert(
+          'Perfil Creado', 
+          'El perfil del usuario se ha guardado en la base de datos.\n\nIMPORTANTE: Debes crear la cuenta de acceso (Email/Password) manualmente en la consola de Firebase Authentication para que pueda ingresar.'
+        );
+
+      } else if (currentUser && currentUser.id) {
+        // EDITAR USUARIO EXISTENTE
         await updateDoc(doc(db, 'users', currentUser.id), {
           name: name.trim(),
           sector: sector.trim(),
@@ -105,9 +144,8 @@ export default function AdminUsersScreen() {
           updatedAt: serverTimestamp(),
         });
         Alert.alert('Éxito', 'Usuario actualizado correctamente');
-      } 
-      // NOTA: No implementamos "Crear" desde cero aquí porque requiere Auth.
-      // Solo editamos perfiles existentes.
+      }
+      
       closeModal();
     } catch (error) {
       console.error(error);
@@ -118,12 +156,11 @@ export default function AdminUsersScreen() {
   };
 
   const handleDelete = (user: User) => {
-    const confirmMessage = "¿Estás seguro de eliminar a este usuario? Perderá acceso al sistema.";
+    const confirmMessage = "¿Estás seguro de eliminar a este usuario? Perderá su perfil en la aplicación.";
     
     const deleteAction = async () => {
       try {
         await deleteDoc(doc(db, 'users', user.id));
-        // Opcional: También deberíamos borrar sus tickets o reasignarlos
       } catch (error) {
         Alert.alert('Error', 'No se pudo eliminar el usuario');
       }
@@ -189,9 +226,16 @@ export default function AdminUsersScreen() {
         }
       />
 
+      <FAB
+        style={styles.fab}
+        icon="plus"
+        label="Nuevo Usuario"
+        onPress={openCreateModal}
+      />
+
       <Portal>
         <Modal visible={modalVisible} onDismiss={closeModal} contentContainerStyle={styles.modalContainer}>
-          <Title style={styles.modalTitle}>Editar Usuario</Title>
+          <Title style={styles.modalTitle}>{isCreating ? 'Crear Nuevo Usuario' : 'Editar Usuario'}</Title>
           <ScrollView>
             <TextInput
               label="Nombre Completo"
@@ -199,6 +243,16 @@ export default function AdminUsersScreen() {
               onChangeText={setName}
               mode="outlined"
               style={styles.input}
+            />
+            <TextInput
+              label="Correo Electrónico"
+              value={email}
+              onChangeText={setEmail}
+              mode="outlined"
+              style={styles.input}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              disabled={!isCreating} // No se puede editar el email una vez creado
             />
             <TextInput
               label="Sector / Servicio"
@@ -235,7 +289,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F5F5' },
   header: { padding: 16, backgroundColor: 'white', elevation: 2 },
   searchbar: { backgroundColor: '#F5F5F5' },
-  listContent: { padding: 16 },
+  listContent: { padding: 16, paddingBottom: 80 }, // Espacio para el FAB
   card: { marginBottom: 12, backgroundColor: 'white' },
   cardContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   userInfo: { flex: 1 },
@@ -245,6 +299,7 @@ const styles = StyleSheet.create({
   chip: { height: 26 },
   actions: { flexDirection: 'column', gap: 4 },
   emptyState: { alignItems: 'center', marginTop: 40 },
+  fab: { position: 'absolute', margin: 16, right: 0, bottom: 0, backgroundColor: '#2E7D32' },
   modalContainer: { backgroundColor: 'white', padding: 20, margin: 20, borderRadius: 8 },
   modalTitle: { marginBottom: 16, color: '#2E7D32', textAlign: 'center' },
   input: { marginBottom: 12 },
