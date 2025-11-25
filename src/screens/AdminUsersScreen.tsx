@@ -13,6 +13,7 @@ import {
   Text,
   Card,
   Title,
+  Paragraph, // AÑADIDO: Importación faltante
   Button,
   FAB,
   Searchbar,
