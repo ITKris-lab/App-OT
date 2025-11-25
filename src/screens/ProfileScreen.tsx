@@ -20,7 +20,7 @@ import {
 } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { useNavigation } from '@react-navigation/native'; // Importar useNavigation
+import { useNavigation } from '@react-navigation/native';
 import { db } from '../firebaseConfig';
 import { User } from '../types';
 
@@ -30,7 +30,7 @@ interface ProfileScreenProps {
 }
 
 export default function ProfileScreen({ user, onLogout }: ProfileScreenProps) {
-  const navigation = useNavigation(); // Hook de navegación
+  const navigation = useNavigation();
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState('');
   const [editedSector, setEditedSector] = useState('');
@@ -90,7 +90,8 @@ export default function ProfileScreen({ user, onLogout }: ProfileScreenProps) {
     );
   };
 
-  const getRoleDisplayName = (role: User['role']) => ({ admin: 'Administrador', patient: 'Paciente' }[role] || 'Usuario');
+  // CAMBIO AQUÍ: 'Paciente' -> 'Usuario Básico'
+  const getRoleDisplayName = (role: User['role']) => ({ admin: 'Administrador', patient: 'Usuario Básico' }[role] || 'Usuario');
   const getRoleIcon = (role: User['role']) => ({ admin: 'shield-checkmark', patient: 'person' }[role] || 'help-circle');
 
   if (!user) {

@@ -115,12 +115,7 @@ export default function AdminUsersScreen() {
     setLoading(true);
     try {
       if (isCreating) {
-        // CREAR USUARIO (Solo perfil en Firestore)
-        // Generamos un ID basado en el email para mantener consistencia o dejamos que Firestore genere uno
-        // Lo ideal es usar el UID de Auth, pero como no lo tenemos, usaremos el email como ID temporal o un auto-ID.
-        // Vamos a usar un ID automático de Firestore, pero guardaremos el email.
-        
-        const newUserRef = doc(collection(db, 'users')); // ID automático
+        const newUserRef = doc(collection(db, 'users'));
         await setDoc(newUserRef, {
           name: name.trim(),
           email: email.trim().toLowerCase(),
@@ -136,7 +131,6 @@ export default function AdminUsersScreen() {
         );
 
       } else if (currentUser && currentUser.id) {
-        // EDITAR USUARIO EXISTENTE
         await updateDoc(doc(db, 'users', currentUser.id), {
           name: name.trim(),
           sector: sector.trim(),
@@ -190,7 +184,7 @@ export default function AdminUsersScreen() {
               style={[styles.chip, { backgroundColor: item.role === 'admin' ? '#E8F5E9' : '#E3F2FD' }]}
               textStyle={{ color: item.role === 'admin' ? '#1B5E20' : '#1565C0' }}
             >
-              {item.role === 'admin' ? 'Administrador' : 'Paciente'}
+              {item.role === 'admin' ? 'Administrador' : 'Usuario Básico'}
             </Chip>
           </View>
         </View>
@@ -266,7 +260,7 @@ export default function AdminUsersScreen() {
             <RadioButton.Group onValueChange={val => setRole(val as 'admin' | 'patient')} value={role}>
               <View style={styles.radioRow}>
                 <RadioButton value="patient" color="#2E7D32" />
-                <Text>Paciente (Usuario normal)</Text>
+                <Text>Usuario Básico</Text>
               </View>
               <View style={styles.radioRow}>
                 <RadioButton value="admin" color="#2E7D32" />
