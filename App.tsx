@@ -7,7 +7,7 @@ import { MD3LightTheme as DefaultTheme, Provider as PaperProvider } from 'react-
 import { StatusBar } from 'expo-status-bar';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, getDoc, setDoc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
 // Firebase
 import { auth, db } from './src/firebaseConfig';
@@ -20,7 +20,7 @@ import TicketListScreen from './src/screens/TicketListScreen';
 import TicketDetailScreen from './src/screens/TicketDetailScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import AdminScreen from './src/screens/AdminScreen';
-import AdminUsersScreen from './src/screens/AdminUsersScreen'; // Importar la nueva pantalla
+import AdminUsersScreen from './src/screens/AdminUsersScreen';
 
 // Types
 import { User } from './src/types';
@@ -28,7 +28,7 @@ import { User } from './src/types';
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Tema completo extendiendo el tema por defecto de React Native Paper
+// Tema completo
 const theme = {
   ...DefaultTheme,
   colors: {
@@ -85,15 +85,42 @@ export default function App() {
   useEffect(() => {
     let userDocListener: (() => void) | undefined;
 
-    const authStateListener = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
+    const authStateListener = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (userDocListener) {
-        userDocListener();
+        userDocListener(); // Limpiar listener anterior si existe
       }
 
       if (firebaseUser) {
         setIsLoading(true);
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         
+        // Verificar si el documento existe por UID
+        const docSnap = await getDoc(userDocRef);
+
+        if (!docSnap.exists() && firebaseUser.email) {
+          // CASO DE MIGRACIÓN: El usuario logueó pero su perfil está "huérfano" con otro ID
+          // Buscamos por email
+          const q = query(collection(db, 'users'), where('email', '==', firebaseUser.email));
+          const querySnapshot = await getDocs(q);
+
+          if (!querySnapshot.empty) {
+            // Encontramos el perfil huérfano! Lo migramos al UID correcto.
+            const oldDoc = querySnapshot.docs[0];
+            const userData = oldDoc.data();
+
+            // 1. Crear el nuevo documento con el UID correcto
+            await setDoc(userDocRef, {
+              ...userData,
+              id: firebaseUser.uid, // Actualizar ID
+            });
+
+            // 2. Borrar el documento antiguo (con ID aleatorio)
+            await deleteDoc(oldDoc.ref);
+            console.log("Perfil migrado automáticamente al UID correcto.");
+          }
+        }
+
+        // Ahora sí, escuchamos el documento correcto (ya sea que existía o lo acabamos de migrar)
         userDocListener = onSnapshot(userDocRef, userDoc => {
           if (userDoc.exists()) {
             const userData = userDoc.data();
@@ -104,6 +131,7 @@ export default function App() {
               updatedAt: userData.updatedAt?.toDate() ?? new Date(),
             } as User);
           } else {
+            // Si después de todo no hay perfil, null
             setUser(null);
           }
           setIsLoading(false);
@@ -132,7 +160,7 @@ export default function App() {
   };
 
   if (isLoading) {
-    return null; // O un componente de carga
+    return null; // O un componente de carga (Splash)
   }
 
   return (
