@@ -125,10 +125,13 @@ export default function AdminUsersScreen() {
           updatedAt: serverTimestamp(),
         });
 
-        Alert.alert(
-          'Perfil Creado', 
-          'El perfil del usuario se ha guardado en la base de datos.\n\nIMPORTANTE: Debes crear la cuenta de acceso (Email/Password) manualmente en la consola de Firebase Authentication para que pueda ingresar.'
-        );
+        const successMessage = 'El perfil del usuario se ha guardado en la base de datos.\n\nIMPORTANTE: Debes crear la cuenta de acceso (Email/Password) manualmente en la consola de Firebase Authentication para que pueda ingresar.';
+        
+        if (Platform.OS === 'web') {
+            alert('Perfil Creado\n\n' + successMessage);
+        } else {
+            Alert.alert('Perfil Creado', successMessage);
+        }
 
       } else if (currentUser && currentUser.id) {
         await updateDoc(doc(db, 'users', currentUser.id), {
@@ -137,13 +140,21 @@ export default function AdminUsersScreen() {
           role: role,
           updatedAt: serverTimestamp(),
         });
-        Alert.alert('Éxito', 'Usuario actualizado correctamente');
+        if (Platform.OS === 'web') {
+             alert('Éxito: Usuario actualizado correctamente');
+        } else {
+             Alert.alert('Éxito', 'Usuario actualizado correctamente');
+        }
       }
       
       closeModal();
     } catch (error) {
       console.error(error);
-      Alert.alert('Error', 'No se pudo guardar los cambios');
+      if (Platform.OS === 'web') {
+        alert('Error: No se pudo guardar los cambios');
+      } else {
+        Alert.alert('Error', 'No se pudo guardar los cambios');
+      }
     } finally {
       setLoading(false);
     }
