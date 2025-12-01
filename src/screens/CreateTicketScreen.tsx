@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import {
   TextInput,
@@ -23,6 +24,8 @@ import {
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import * as ImagePicker from 'expo-image-picker';
 import { db } from '../firebaseConfig';
 import { TicketCategory, User } from '../types';
 
@@ -48,6 +51,41 @@ export default function CreateTicketScreen({ user }: CreateTicketScreenProps) {
   const [location, setLocation] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [imageUri, setImageUri] = useState<string | null>(null);
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permiso denegado', 'Se necesita acceso a la galería para subir imágenes.');
+      return;
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setImageUri(result.assets[0].uri);
+    }
+  };
+
+  const uploadImage = async (uri: string) => {
+    try {
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      const filename = `evidence/${new Date().getTime()}_${Math.random().toString(36).substring(7)}.jpg`;
+      const storage = getStorage();
+      const storageRef = ref(storage, filename);
+      
+      await uploadBytes(storageRef, blob);
+      return await getDownloadURL(storageRef);
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      throw new Error('Error al subir la imagen');
+    }
+  };
 
   const handleSubmit = async () => {
     if (!title.trim() || !description.trim() || !location.trim() || !user) {
@@ -58,6 +96,11 @@ export default function CreateTicketScreen({ user }: CreateTicketScreenProps) {
     setIsLoading(true);
 
     try {
+      let imageUrl = null;
+      if (imageUri) {
+        imageUrl = await uploadImage(imageUri);
+      }
+
       await addDoc(collection(db, 'tickets'), {
         title: title.trim(),
         description: description.trim(),
@@ -67,6 +110,7 @@ export default function CreateTicketScreen({ user }: CreateTicketScreenProps) {
         createdBy: user.id,
         createdByName: user.name,
         location: location.trim(),
+        imageUrl: imageUrl, // Guardar URL de la imagen si existe
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -110,6 +154,24 @@ export default function CreateTicketScreen({ user }: CreateTicketScreenProps) {
                   <Text style={[styles.categoryText, category === cat.value && styles.categoryTextSelected]}>{cat.label}</Text>
                 </TouchableOpacity>
               ))}
+            </View>
+
+            <Divider style={styles.divider} />
+
+            <Title style={styles.sectionTitle}>Evidencia (Opcional)</Title>
+            <View style={styles.evidenceContainer}>
+              {imageUri ? (
+                <View style={styles.imagePreviewContainer}>
+                  <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+                  <TouchableOpacity style={styles.removeImageButton} onPress={() => setImageUri(null)}>
+                    <MaterialCommunityIcons name="close-circle" size={24} color="#C62828" />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <Button mode="outlined" onPress={pickImage} icon="camera" style={styles.uploadButton}>
+                  Adjuntar Foto
+                </Button>
+              )}
             </View>
 
             <Divider style={styles.divider} />
@@ -165,4 +227,9 @@ const styles = StyleSheet.create({
   categoryTextSelected: { color: '#2E7D32', fontWeight: 'bold' },
   submitButton: { marginTop: 16, backgroundColor: '#2E7D32' },
   buttonContent: { paddingVertical: 8 },
+  evidenceContainer: { alignItems: 'center', marginVertical: 8 },
+  uploadButton: { width: '100%' },
+  imagePreviewContainer: { position: 'relative', width: '100%', height: 200, borderRadius: 8, overflow: 'hidden' },
+  imagePreview: { width: '100%', height: '100%', resizeMode: 'cover' },
+  removeImageButton: { position: 'absolute', top: 8, right: 8, backgroundColor: 'white', borderRadius: 12 },
 });
