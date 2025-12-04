@@ -19,10 +19,10 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 import { collection, onSnapshot, query, where, orderBy, limit } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { Ticket, User, TicketStatus } from '../types';
+import { Orden, User, OrdenStatus } from '../types';
 
 // Constantes
-const TICKET_STATUSES: { value: TicketStatus; label: string; color: string }[] = [
+const ORDEN_STATUSES: { value: OrdenStatus; label: string; color: string }[] = [
   { value: 'open', label: 'Abierto', color: '#2196F3' },
   { value: 'in_progress', label: 'En Progreso', color: '#FF9800' },
   { value: 'pending', label: 'Pendiente', color: '#9C27B0' },
@@ -55,21 +55,21 @@ interface HomeScreenProps {
 
 export default function HomeScreen({ user }: HomeScreenProps) {
   const navigation = useNavigation();
-  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [ordenes, setOrdenes] = useState<Orden[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (!user) return;
 
-    let ticketsQuery = query(collection(db, 'tickets'), orderBy('createdAt', 'desc'), limit(10));
+    let ordenesQuery = query(collection(db, 'ordenes_trabajo'), orderBy('createdAt', 'desc'), limit(10));
 
     if (user.role !== 'admin') {
-      ticketsQuery = query(ticketsQuery, where('createdBy', '==', user.id));
+      ordenesQuery = query(ordenesQuery, where('createdBy', '==', user.id));
     }
 
-    const unsubscribe = onSnapshot(ticketsQuery, (snapshot) => {
-      const ticketsData = snapshot.docs.map(doc => {
+    const unsubscribe = onSnapshot(ordenesQuery, (snapshot) => {
+      const ordenesData = snapshot.docs.map(doc => {
         const data = doc.data();
         return {
           id: doc.id,
@@ -77,9 +77,9 @@ export default function HomeScreen({ user }: HomeScreenProps) {
           createdAt: data.createdAt?.toDate() ?? new Date(),
           updatedAt: data.updatedAt?.toDate() ?? new Date(),
           resolvedAt: data.resolvedAt?.toDate(),
-        } as Ticket;
+        } as Orden;
       });
-      setTickets(ticketsData);
+      setOrdenes(ordenesData);
       setIsLoading(false);
     });
     return () => unsubscribe();
@@ -90,9 +90,9 @@ export default function HomeScreen({ user }: HomeScreenProps) {
     setTimeout(() => setRefreshing(false), 1000);
   };
 
-  const getStatusColor = (status: Ticket['status']) => TICKET_STATUSES.find(s => s.value === status)?.color || '#666';
+  const getStatusColor = (status: Orden['status']) => ORDEN_STATUSES.find(s => s.value === status)?.color || '#666';
 
-  const getPriorityColor = (priority: Ticket['priority']) => {
+  const getPriorityColor = (priority: Orden['priority']) => {
     switch (priority) {
       case 'low': return '#1B5E20';
       case 'medium': return '#FF9800';
@@ -125,12 +125,12 @@ export default function HomeScreen({ user }: HomeScreenProps) {
 
         <Card style={styles.statsCard}>
           <Card.Content>
-            <Title style={styles.cardTitle}>Resumen de Mis Tickets</Title>
+            <Title style={styles.cardTitle}>Resumen de Mis Órdenes</Title>
             <View style={styles.statsRow}>
-              <View style={styles.statItem}><Text style={styles.statNumber}>{tickets.length}</Text><Text style={styles.statLabel}>Total</Text></View>
-              <View style={styles.statItem}><Text style={[styles.statNumber, { color: '#2196F3' }]}>{tickets.filter(t => t.status === 'open').length}</Text><Text style={styles.statLabel}>Abiertos</Text></View>
-              <View style={styles.statItem}><Text style={[styles.statNumber, { color: '#FF9800' }]}>{tickets.filter(t => t.status === 'in_progress').length}</Text><Text style={styles.statLabel}>En Progreso</Text></View>
-              <View style={styles.statItem}><Text style={[styles.statNumber, { color: '#1B5E20' }]}>{tickets.filter(t => t.status === 'resolved').length}</Text><Text style={styles.statLabel}>Resueltos</Text></View>
+              <View style={styles.statItem}><Text style={styles.statNumber}>{ordenes.length}</Text><Text style={styles.statLabel}>Total</Text></View>
+              <View style={styles.statItem}><Text style={[styles.statNumber, { color: '#2196F3' }]}>{ordenes.filter(t => t.status === 'open').length}</Text><Text style={styles.statLabel}>Abiertos</Text></View>
+              <View style={styles.statItem}><Text style={[styles.statNumber, { color: '#FF9800' }]}>{ordenes.filter(t => t.status === 'in_progress').length}</Text><Text style={styles.statLabel}>En Progreso</Text></View>
+              <View style={styles.statItem}><Text style={[styles.statNumber, { color: '#1B5E20' }]}>{ordenes.filter(t => t.status === 'resolved').length}</Text><Text style={styles.statLabel}>Resueltos</Text></View>
             </View>
           </Card.Content>
         </Card>
@@ -138,44 +138,44 @@ export default function HomeScreen({ user }: HomeScreenProps) {
         <Card style={styles.ticketsCard}>
           <Card.Content>
             <View style={styles.cardHeader}>
-              <Title style={styles.cardTitle}>Mis Tickets Recientes</Title>
-              <Button mode="text" onPress={() => navigation.navigate('Tickets' as never)} compact>Ver todos</Button>
+              <Title style={styles.cardTitle}>Mis Órdenes Recientes</Title>
+              <Button mode="text" onPress={() => navigation.navigate('Tickets' as never)} compact>Ver todas</Button>
             </View>
-            {isLoading ? <Text>Cargando tickets...</Text> : tickets.length === 0 ? (
+            {isLoading ? <Text>Cargando órdenes...</Text> : ordenes.length === 0 ? (
               <View style={styles.emptyState}>
                 <MaterialCommunityIcons name="newspaper-variant-multiple-outline" size={48} color="#ccc" />
-                <Text style={styles.emptyText}>No has creado tickets</Text>
-                <Button mode="contained" onPress={() => navigation.navigate('Crear' as never)} style={styles.createButton}>Crear mi primer ticket</Button>
+                <Text style={styles.emptyText}>No has creado órdenes</Text>
+                <Button mode="contained" onPress={() => navigation.navigate('Crear' as never)} style={styles.createButton}>Crear mi primera orden</Button>
               </View>
             ) : (
-              tickets.slice(0, 3).map((ticket) => {
-                const statusColor = getStatusColor(ticket.status);
-                const priorityColor = getPriorityColor(ticket.priority);
+              ordenes.slice(0, 3).map((orden) => {
+                const statusColor = getStatusColor(orden.status);
+                const priorityColor = getPriorityColor(orden.priority);
                 const statusTextColor = isColorLight(statusColor) ? '#000' : '#FFF';
                 const priorityTextColor = isColorLight(priorityColor) ? '#000' : '#FFF';
 
                 return (
-                  <Card key={ticket.id} style={styles.ticketCard} onPress={() => navigation.navigate('TicketDetail' as never, { ticketId: ticket.id } as never)}>
+                  <Card key={orden.id} style={styles.ticketCard} onPress={() => navigation.navigate('TicketDetail' as never, { ticketId: orden.id } as never)}>
                     <Card.Content>
                       <View style={styles.ticketHeader}>
-                        <Title style={styles.ticketTitle} numberOfLines={1}>{ticket.title}</Title>
+                        <Title style={styles.ticketTitle} numberOfLines={1}>{orden.title}</Title>
                         <Chip 
                           style={[styles.statusChip, { backgroundColor: statusColor }]}
                           textStyle={[styles.chipText, { color: statusTextColor }]}
                           compact
                         >
-                          {TICKET_STATUSES.find(s => s.value === ticket.status)?.label}
+                          {ORDEN_STATUSES.find(s => s.value === orden.status)?.label}
                         </Chip>
                       </View>
-                      <Paragraph style={styles.ticketDescription} numberOfLines={2}>{ticket.description}</Paragraph>
+                      <Paragraph style={styles.ticketDescription} numberOfLines={2}>{orden.description}</Paragraph>
                       <View style={styles.ticketFooter}>
-                        <View style={styles.ticketInfo}><MaterialCommunityIcons name="map-marker-outline" size={14} color="#666" /><Text style={styles.ticketLocation}>{ticket.location}</Text></View>
+                        <View style={styles.ticketInfo}><MaterialCommunityIcons name="map-marker-outline" size={14} color="#666" /><Text style={styles.ticketLocation}>{orden.location}</Text></View>
                         <Chip 
                           style={[styles.priorityChip, { backgroundColor: priorityColor }]}
                           textStyle={[styles.chipText, { color: priorityTextColor }]}
                           compact
                         >
-                          {ticket.priority.toUpperCase()}
+                          {orden.priority.toUpperCase()}
                         </Chip>
                       </View>
                     </Card.Content>
@@ -190,8 +190,8 @@ export default function HomeScreen({ user }: HomeScreenProps) {
           <Card.Content>
             <Title style={styles.cardTitle}>Acciones Rápidas</Title>
             <View style={styles.actionButtons}>
-              <Button mode="contained" onPress={() => navigation.navigate('Crear' as never)} style={styles.actionButton} icon="plus">Nuevo Ticket</Button>
-              <Button mode="outlined" onPress={() => navigation.navigate('Tickets' as never)} style={styles.actionButton} icon="format-list-bulleted">Ver Mis Tickets</Button>
+              <Button mode="contained" onPress={() => navigation.navigate('Crear' as never)} style={styles.actionButton} icon="plus">Nueva Orden</Button>
+              <Button mode="outlined" onPress={() => navigation.navigate('Tickets' as never)} style={styles.actionButton} icon="format-list-bulleted">Ver Mis Órdenes</Button>
             </View>
           </Card.Content>
         </Card>

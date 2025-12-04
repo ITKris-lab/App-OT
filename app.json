@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "hospital-tickets-nuevo",
-    "slug": "hospital-tickets-nuevo",
+    "name": "Ordenes de Trabajo",
+    "slug": "app-ot",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.christopherlab.hospitalticketsnuevo"
+      "bundleIdentifier": "com.christopherlab.appot"
     },
     "android": {
       "adaptiveIcon": {
@@ -23,15 +23,16 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.christopherlab.hospitalticketsnuevo"
+      "package": "com.christopherlab.appot"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {
-        "projectId": "00555064-9c99-4154-9040-9e83430b8c16"
+        "projectId": "0ea082a2-5980-492d-a5fd-7e0606738d70"
       }
-    }
+    },
+    "owner": "christopherlab"
   }
 }

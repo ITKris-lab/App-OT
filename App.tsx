@@ -15,9 +15,9 @@ import { auth, db } from './src/firebaseConfig';
 // Screens
 import LoginScreen from './src/screens/LoginScreen';
 import HomeScreen from './src/screens/HomeScreen';
-import CreateTicketScreen from './src/screens/CreateTicketScreen';
-import TicketListScreen from './src/screens/TicketListScreen';
-import TicketDetailScreen from './src/screens/TicketDetailScreen';
+import CreateOrdenScreen from './src/screens/CreateOrdenScreen';
+import OrdenListScreen from './src/screens/OrdenListScreen';
+import OrdenDetailScreen from './src/screens/OrdenDetailScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import AdminScreen from './src/screens/AdminScreen';
 import AdminUsersScreen from './src/screens/AdminUsersScreen';
@@ -65,11 +65,11 @@ function MainTabs({ user, onLogout }: { user: User; onLogout: () => void }) {
       <Tab.Screen name="Inicio" options={{ title: 'Hospital Collipulli' }}>
         {(props) => <HomeScreen {...props} user={user} />}
       </Tab.Screen>
-      <Tab.Screen name="Tickets" options={{ title: 'Mis Tickets' }}>
-        {(props) => <TicketListScreen {...props} user={user} />}
+      <Tab.Screen name="Tickets" options={{ title: 'Mis Órdenes' }}>
+        {(props) => <OrdenListScreen {...props} user={user} />}
       </Tab.Screen>
-      <Tab.Screen name="Crear" options={{ title: 'Nuevo Ticket' }}>
-        {(props) => <CreateTicketScreen {...props} user={user} />}
+      <Tab.Screen name="Crear" options={{ title: 'Nueva Orden' }}>
+        {(props) => <CreateOrdenScreen {...props} user={user} />}
       </Tab.Screen>
       <Tab.Screen name="Perfil" options={{ title: 'Mi Perfil' }}>
         {(props) => <ProfileScreen {...props} user={user} onLogout={onLogout} />}
@@ -178,7 +178,7 @@ export default function App() {
               {(props) => <MainTabs {...props} user={user} onLogout={handleLogout} />}
             </Stack.Screen>
             <Stack.Screen name="TicketDetail">
-                {(props) => <TicketDetailScreen {...props} user={user} />}
+                {(props) => <OrdenDetailScreen {...props} user={user} />}
             </Stack.Screen>
             {user.role === 'admin' && (
               <>

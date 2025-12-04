@@ -9,13 +9,13 @@ export interface User {
   updatedAt: any; // Se convierte a Date en la app
 }
 
-export interface Ticket {
+export interface Orden {
   id: string;
   title: string;
   description: string;
-  category: TicketCategory;
-  priority: TicketPriority;
-  status: TicketStatus;
+  category: OrdenCategory;
+  priority: OrdenPriority;
+  status: OrdenStatus;
   createdBy: string; // User ID
   createdByName: string;
   location?: string;
@@ -42,7 +42,7 @@ export interface Comment {
   createdAt: any; // Se convierte a Date en la app
 }
 
-export type TicketCategory = 
+export type OrdenCategory = 
   | 'hardware'
   | 'software'
   | 'network'
@@ -50,9 +50,9 @@ export type TicketCategory =
   | 'user_support'
   | 'other';
 
-export type TicketPriority = 'low' | 'medium' | 'high';
+export type OrdenPriority = 'low' | 'medium' | 'high';
 
-export type TicketStatus = 
+export type OrdenStatus = 
   | 'open'
   | 'in_progress'
   | 'pending'

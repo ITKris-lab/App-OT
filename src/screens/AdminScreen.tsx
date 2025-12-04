@@ -18,10 +18,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { Ticket, User, TicketCategory } from '../types';
+import { Orden, User, OrdenCategory } from '../types';
 
 // Constantes
-const TICKET_CATEGORIES: { value: TicketCategory; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+const ORDEN_CATEGORIES: { value: OrdenCategory; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { value: 'hardware', label: 'Hardware', icon: 'hardware-chip-outline' },
   { value: 'software', label: 'Software', icon: 'apps-outline' },
   { value: 'network', label: 'Redes', icon: 'wifi-outline' },
@@ -32,17 +32,17 @@ const TICKET_CATEGORIES: { value: TicketCategory; label: string; icon: keyof typ
 
 export default function AdminScreen() {
   const navigation = useNavigation();
-  const [allTickets, setAllTickets] = useState<Ticket[]>([]);
+  const [allOrdenes, setAllOrdenes] = useState<Orden[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const ticketsQuery = query(collection(db, 'tickets'), orderBy('createdAt', 'desc'));
+    const ordenesQuery = query(collection(db, 'ordenes_trabajo'), orderBy('createdAt', 'desc'));
     const usersQuery = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
 
-    const unsubTickets = onSnapshot(ticketsQuery, snapshot => {
-      const ticketsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: doc.data().createdAt?.toDate() ?? new Date() } as Ticket));
-      setAllTickets(ticketsData);
+    const unsubOrdenes = onSnapshot(ordenesQuery, snapshot => {
+      const ordenesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: doc.data().createdAt?.toDate() ?? new Date() } as Orden));
+      setAllOrdenes(ordenesData);
       checkLoading();
     });
 
@@ -58,7 +58,7 @@ export default function AdminScreen() {
       setIsLoading(false);
     }
 
-    return () => { unsubTickets(); unsubUsers(); };
+    return () => { unsubOrdenes(); unsubUsers(); };
   }, []);
 
   if (isLoading) {
@@ -107,26 +107,26 @@ export default function AdminScreen() {
              </Card>
              <Card style={[styles.card, styles.statCard]}>
                 <Card.Content style={{ alignItems: 'center' }}>
-                    <Title style={styles.statNumber}>{allTickets.length}</Title>
-                    <Paragraph style={styles.statLabel}>Tickets Totales</Paragraph>
+                    <Title style={styles.statNumber}>{allOrdenes.length}</Title>
+                    <Paragraph style={styles.statLabel}>Órdenes Totales</Paragraph>
                 </Card.Content>
              </Card>
              <Card style={[styles.card, styles.statCard]}>
                 <Card.Content style={{ alignItems: 'center' }}>
                     <Title style={[styles.statNumber, {color: '#F44336'}]}>
-                        {allTickets.filter(t => t.status === 'open').length}
+                        {allOrdenes.filter(t => t.status === 'open').length}
                     </Title>
-                    <Paragraph style={styles.statLabel}>Abiertos</Paragraph>
+                    <Paragraph style={styles.statLabel}>Abiertas</Paragraph>
                 </Card.Content>
              </Card>
           </View>
 
-          {/* Resumen de Tickets por Categoría */}
+          {/* Resumen de Ordenes por Categoría */}
           <Card style={styles.card}>
             <Card.Content>
-              <Title style={styles.cardTitle}>Tickets por Categoría</Title>
-              {TICKET_CATEGORIES.map(category => {
-                const count = allTickets.filter(t => t.category === category.value).length;
+              <Title style={styles.cardTitle}>Órdenes por Categoría</Title>
+              {ORDEN_CATEGORIES.map(category => {
+                const count = allOrdenes.filter(t => t.category === category.value).length;
                 if (count === 0) return null;
                 return (
                   <View key={category.value} style={styles.categoryRow}>
