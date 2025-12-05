@@ -69,7 +69,7 @@ export default function LoginScreen() {
           <Ionicons name="medical-outline" size={60} color="#2E7D32" />
           <Title style={styles.title}>{HOSPITAL_INFO.name}</Title>
           <Paragraph style={styles.subtitle}>
-            Sistema de Soporte de Tickets
+            Sistema de Ordenes de Trabajo
           </Paragraph>
         </View>
 
