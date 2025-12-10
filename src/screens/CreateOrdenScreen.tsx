@@ -27,16 +27,32 @@ import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import * as ImagePicker from 'expo-image-picker';
 import { db } from '../firebaseConfig';
-import { OrdenCategory, User } from '../types';
+import { OrdenCategory, OrdenActivity, User } from '../types';
 
-// Categorías con íconos de MaterialCommunityIcons
-const ORDEN_CATEGORIES: { value: OrdenCategory; label: string; icon: keyof typeof MaterialCommunityIcons.glyphMap }[] = [
-  { value: 'hardware', label: 'Hardware', icon: 'memory' },
-  { value: 'software', label: 'Software', icon: 'apps' },
-  { value: 'network', label: 'Redes', icon: 'wifi' },
-  { value: 'printer', label: 'Impresoras', icon: 'printer-outline' },
-  { value: 'user_support', label: 'Soporte Usuario', icon: 'account-circle-outline' },
-  { value: 'other', label: 'Otro', icon: 'help-circle-outline' },
+// Tipos de Trabajo (Categorías)
+const TIPOS_TRABAJO: { value: OrdenCategory; label: string; icon: keyof typeof MaterialCommunityIcons.glyphMap }[] = [
+  { value: 'climatizacion', label: 'Climatización', icon: 'air-conditioner' },
+  { value: 'electrica', label: 'Eléctrica', icon: 'lightning-bolt' },
+  { value: 'mecanica', label: 'Mecánica', icon: 'cog' },
+  { value: 'electronica', label: 'Electrónica', icon: 'chip' },
+  { value: 'operacion', label: 'Operación', icon: 'dolly' },
+  { value: 'fontaneria', label: 'Fontanería', icon: 'water-pump' },
+  { value: 'albanileria', label: 'Albañilería', icon: 'wall' },
+  { value: 'pintura', label: 'Pintura', icon: 'format-paint' },
+  { value: 'carpinteria', label: 'Carpintería', icon: 'hand-saw' },
+];
+
+// Tipos de Actividad
+const TIPOS_ACTIVIDAD: { value: OrdenActivity; label: string; icon: keyof typeof MaterialCommunityIcons.glyphMap }[] = [
+  { value: 'reparacion', label: 'Reparación', icon: 'wrench' },
+  { value: 'mantenimiento', label: 'Mantenimiento', icon: 'tools' },
+  { value: 'mejoramiento', label: 'Mejoramiento', icon: 'trending-up' },
+  { value: 'instalacion', label: 'Instalación', icon: 'plus-box-multiple' },
+  { value: 'traslado', label: 'Traslado', icon: 'truck-delivery' },
+  { value: 'revision', label: 'Revisión', icon: 'clipboard-check-outline' },
+  { value: 'limpieza', label: 'Limpieza', icon: 'broom' },
+  { value: 'reemplazo', label: 'Reemplazo', icon: 'swap-horizontal' },
+  { value: 'verificacion', label: 'Verificación', icon: 'check-decagram' },
 ];
 
 interface CreateOrdenScreenProps {
@@ -47,52 +63,22 @@ export default function CreateOrdenScreen({ user }: CreateOrdenScreenProps) {
   const navigation = useNavigation();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<OrdenCategory>('hardware');
+  const [category, setCategory] = useState<OrdenCategory>('climatizacion');
+  const [activity, setActivity] = useState<OrdenActivity>('reparacion');
   const [location, setLocation] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [imageUri, setImageUri] = useState<string | null>(null);
 
-  const pickImage = async () => {
+  const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Permiso denegado', 'Se necesita acceso a la galería para subir imágenes.');
       return;
     }
-
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 0.7,
-    });
-
+    let result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, quality: 0.7 });
     if (!result.canceled) {
       setImageUri(result.assets[0].uri);
-    }
-  };
-
-  // Función específica para web: usar un input type="file" invisible
-  const pickImageWeb = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = async (e: any) => {
-      const file = e.target.files[0];
-      if (file) {
-        const uri = URL.createObjectURL(file);
-        setImageUri(uri);
-        // Guardamos el blob directamente en una propiedad temporal para luego subirlo
-        // Aunque en la web, fetch(uri) debería funcionar para obtener el blob si es un blob: URL
-      }
-    };
-    input.click();
-  };
-
-  const handlePickImage = () => {
-    if (Platform.OS === 'web') {
-      pickImageWeb();
-    } else {
-      pickImage();
     }
   };
 
@@ -103,7 +89,6 @@ export default function CreateOrdenScreen({ user }: CreateOrdenScreenProps) {
       const filename = `evidence/${new Date().getTime()}_${Math.random().toString(36).substring(7)}.jpg`;
       const storage = getStorage();
       const storageRef = ref(storage, filename);
-      
       await uploadBytes(storageRef, blob);
       return await getDownloadURL(storageRef);
     } catch (error) {
@@ -117,35 +102,28 @@ export default function CreateOrdenScreen({ user }: CreateOrdenScreenProps) {
       Alert.alert('Campos incompletos', 'Por favor completa todos los campos obligatorios (*).');
       return;
     }
-
     setIsLoading(true);
-
     try {
       let imageUrl = null;
       if (imageUri) {
         imageUrl = await uploadImage(imageUri);
       }
-
       await addDoc(collection(db, 'ordenes_trabajo'), {
         title: title.trim(),
         description: description.trim(),
-        category,
-        priority: 'medium', // Prioridad por defecto
+        category, // Tipo de Trabajo
+        activity, // Tipo de Actividad
+        priority: 'medium',
         status: 'open',
         createdBy: user.id,
         createdByName: user.name,
         location: location.trim(),
-        imageUrl: imageUrl, // Guardar URL de la imagen si existe
+        imageUrl,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
-
-      // Mostrar notificación visual y esperar antes de salir
       setSnackbarVisible(true);
-      setTimeout(() => {
-        navigation.goBack();
-      }, 1500);
-
+      setTimeout(() => navigation.goBack(), 1500);
     } catch (error) {
       console.error("Error creating orden:", error);
       Alert.alert('Error', 'No se pudo crear la orden. Inténtalo de nuevo.');
@@ -159,21 +137,22 @@ export default function CreateOrdenScreen({ user }: CreateOrdenScreenProps) {
       <ScrollView style={styles.scrollView}>
         <Surface style={styles.header}>
           <MaterialCommunityIcons name="plus-circle-outline" size={32} color="white" />
-          <Title style={styles.headerTitle}>Nueva Orden</Title>
-          <Paragraph style={styles.headerSubtitle}>Reporta un problema o solicita un servicio</Paragraph>
+          <Title style={styles.headerTitle}>Nueva Orden de Trabajo</Title>
+          <Paragraph style={styles.headerSubtitle}>Complete el formulario para generar una nueva OT</Paragraph>
         </Surface>
 
         <Card style={styles.card}>
           <Card.Content>
-            <Title style={styles.sectionTitle}>Información Básica</Title>
-            <TextInput label="Título de la orden *" value={title} onChangeText={setTitle} mode="outlined" style={styles.input} placeholder="Ej: PC no enciende" left={<TextInput.Icon icon="subtitles-outline" />} />
-            <TextInput label="Descripción detallada *" value={description} onChangeText={setDescription} mode="outlined" multiline numberOfLines={4} style={styles.input} placeholder="Describe el problema y dónde ocurre..." left={<TextInput.Icon icon="text-box-outline" />} />
+            <Title style={styles.sectionTitle}>1. Detalles de la Solicitud</Title>
+            <TextInput label="Título de la orden *" value={title} onChangeText={setTitle} mode="outlined" style={styles.input} placeholder="Ej: Reparar aire acondicionado" left={<TextInput.Icon icon="subtitles-outline" />} />
+            <TextInput label="Descripción detallada *" value={description} onChangeText={setDescription} mode="outlined" multiline numberOfLines={4} style={styles.input} placeholder="Describe el problema o la necesidad..." left={<TextInput.Icon icon="text-box-outline" />} />
+            <TextInput label="Ubicación específica *" value={location} onChangeText={setLocation} mode="outlined" style={styles.input} placeholder="Ej: Oficina de Partes, Box 5" left={<TextInput.Icon icon="map-marker-outline" />} />
 
             <Divider style={styles.divider} />
 
-            <Title style={styles.sectionTitle}>Categoría</Title>
+            <Title style={styles.sectionTitle}>2. Tipo de Trabajo</Title>
             <View style={styles.categoryGrid}>
-              {ORDEN_CATEGORIES.map((cat) => (
+              {TIPOS_TRABAJO.map((cat) => (
                 <TouchableOpacity key={cat.value} style={[styles.categoryItem, category === cat.value && styles.categoryItemSelected]} onPress={() => setCategory(cat.value)}>
                   <MaterialCommunityIcons name={cat.icon} size={22} color={category === cat.value ? '#1976D2' : '#666'} />
                   <Text style={[styles.categoryText, category === cat.value && styles.categoryTextSelected]}>{cat.label}</Text>
@@ -183,7 +162,19 @@ export default function CreateOrdenScreen({ user }: CreateOrdenScreenProps) {
 
             <Divider style={styles.divider} />
 
-            <Title style={styles.sectionTitle}>Evidencia (Opcional)</Title>
+            <Title style={styles.sectionTitle}>3. Tipo de Actividad</Title>
+            <View style={styles.categoryGrid}>
+              {TIPOS_ACTIVIDAD.map((act) => (
+                <TouchableOpacity key={act.value} style={[styles.categoryItem, activity === act.value && styles.categoryItemSelected]} onPress={() => setActivity(act.value)}>
+                  <MaterialCommunityIcons name={act.icon} size={22} color={activity === act.value ? '#1976D2' : '#666'} />
+                  <Text style={[styles.categoryText, activity === act.value && styles.categoryTextSelected]}>{act.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Divider style={styles.divider} />
+
+            <Title style={styles.sectionTitle}>4. Evidencia (Opcional)</Title>
             <View style={styles.evidenceContainer}>
               {imageUri ? (
                 <View style={styles.imagePreviewContainer}>
@@ -198,11 +189,6 @@ export default function CreateOrdenScreen({ user }: CreateOrdenScreenProps) {
                 </Button>
               )}
             </View>
-
-            <Divider style={styles.divider} />
-
-            <Title style={styles.sectionTitle}>Información Adicional</Title>
-            <TextInput label="Ubicación específica *" value={location} onChangeText={setLocation} mode="outlined" style={styles.input} placeholder="Ej: Oficina de Partes, Box 5" left={<TextInput.Icon icon="map-marker-outline" />} />
 
             <Button
               mode="contained"
@@ -225,9 +211,7 @@ export default function CreateOrdenScreen({ user }: CreateOrdenScreenProps) {
         style={{ backgroundColor: '#1976D2', marginBottom: 20 }}
         action={{
           label: 'OK',
-          onPress: () => {
-            navigation.goBack();
-          },
+          onPress: () => navigation.goBack(),
         }}>
         Orden creada exitosamente
       </Snackbar>
@@ -245,12 +229,12 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#1976D2', marginBottom: 16, marginTop: 8 },
   input: { marginBottom: 16 },
   divider: { marginVertical: 16 },
-  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around', gap: 8 },
-  categoryItem: { width: '45%', padding: 12, borderRadius: 8, alignItems: 'center', borderWidth: 2, borderColor: 'transparent', backgroundColor: '#F8F9FA' },
+  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around', gap: 10 },
+  categoryItem: { width: '30%', paddingVertical: 12, paddingHorizontal: 4, borderRadius: 8, alignItems: 'center', borderWidth: 2, borderColor: 'transparent', backgroundColor: '#F8F9FA' },
   categoryItemSelected: { borderColor: '#1976D2', backgroundColor: 'rgba(25, 118, 210, 0.1)' },
-  categoryText: { fontSize: 12, textAlign: 'center', marginTop: 6, color: '#666' },
+  categoryText: { fontSize: 11, textAlign: 'center', marginTop: 6, color: '#666', fontWeight: '500' },
   categoryTextSelected: { color: '#1976D2', fontWeight: 'bold' },
-  submitButton: { marginTop: 16, backgroundColor: '#1976D2' },
+  submitButton: { marginTop: 24, backgroundColor: '#1976D2' },
   buttonContent: { paddingVertical: 8 },
   evidenceContainer: { alignItems: 'center', marginVertical: 8 },
   uploadButton: { width: '100%' },

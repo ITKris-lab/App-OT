@@ -14,12 +14,14 @@ export interface Orden {
   title: string;
   description: string;
   category: OrdenCategory;
+  activity: OrdenActivity; // Nuevo campo
   priority: OrdenPriority;
   status: OrdenStatus;
   createdBy: string; // User ID
   createdByName: string;
   location?: string;
-  attachments?: Attachment[];
+  imageUrl?: string; // URL de la imagen principal
+  attachments?: Attachment[]; // Para compatibilidad futura
   comments?: Comment[];
   createdAt: any; // Se convierte a Date en la app
   updatedAt: any; // Se convierte a Date en la app
@@ -43,12 +45,26 @@ export interface Comment {
 }
 
 export type OrdenCategory = 
-  | 'hardware'
-  | 'software'
-  | 'network'
-  | 'printer'
-  | 'user_support'
-  | 'other';
+  | 'climatizacion'
+  | 'electrica'
+  | 'mecanica'
+  | 'electronica'
+  | 'operacion'
+  | 'fontaneria'
+  | 'albanileria'
+  | 'pintura'
+  | 'carpinteria';
+
+export type OrdenActivity =
+  | 'reparacion'
+  | 'mantenimiento'
+  | 'mejoramiento'
+  | 'instalacion'
+  | 'traslado'
+  | 'revision'
+  | 'limpieza'
+  | 'reemplazo'
+  | 'verificacion';
 
 export type OrdenPriority = 'low' | 'medium' | 'high';
 
