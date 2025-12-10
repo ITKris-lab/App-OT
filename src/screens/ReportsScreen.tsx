@@ -6,7 +6,6 @@ import {
   ScrollView,
   Platform,
   Alert,
-  Share,
 } from 'react-native';
 import {
   Card,
@@ -18,12 +17,22 @@ import {
   ProgressBar,
   List,
 } from 'react-native-paper';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Orden } from '../types';
-import * as FileSystem from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
+
+// Importación condicional o segura para evitar errores en Web
+let FileSystem: any;
+let Sharing: any;
+
+if (Platform.OS !== 'web') {
+  try {
+    FileSystem = require('expo-file-system');
+    Sharing = require('expo-sharing');
+  } catch (e) {
+    console.warn("Librerías nativas no encontradas");
+  }
+}
 
 export default function ReportsScreen() {
   const [ordenes, setOrdenes] = useState<Orden[]>([]);
@@ -119,7 +128,7 @@ export default function ReportsScreen() {
     const csvData = generateCSV();
 
     if (Platform.OS === 'web') {
-      // Descarga directa en navegador
+      // Descarga directa en navegador (API nativa del navegador)
       const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement("a");
       const url = URL.createObjectURL(blob);
@@ -130,19 +139,23 @@ export default function ReportsScreen() {
       link.click();
       document.body.removeChild(link);
     } else {
-      // Móvil: Guardar y Compartir
-      try {
-        const fileUri = FileSystem.documentDirectory + 'reporte_ot.csv';
-        await FileSystem.writeAsStringAsync(fileUri, csvData, { encoding: FileSystem.EncodingType.UTF8 });
-        
-        if (await Sharing.isAvailableAsync()) {
-          await Sharing.shareAsync(fileUri);
-        } else {
-          Alert.alert('Info', 'Compartir no está disponible en este dispositivo');
+      // Móvil: Guardar y Compartir usando las librerías nativas
+      if (FileSystem && Sharing) {
+        try {
+          const fileUri = FileSystem.documentDirectory + 'reporte_ot.csv';
+          await FileSystem.writeAsStringAsync(fileUri, csvData, { encoding: FileSystem.EncodingType.UTF8 });
+          
+          if (await Sharing.isAvailableAsync()) {
+            await Sharing.shareAsync(fileUri);
+          } else {
+            Alert.alert('Info', 'Compartir no está disponible en este dispositivo');
+          }
+        } catch (error) {
+          console.error(error);
+          Alert.alert('Error', 'No se pudo generar el archivo');
         }
-      } catch (error) {
-        console.error(error);
-        Alert.alert('Error', 'No se pudo generar el archivo');
+      } else {
+        Alert.alert('Error', 'Librerías de sistema de archivos no disponibles');
       }
     }
   };
