@@ -207,7 +207,7 @@ export default function OrdenListScreen({ user }: OrdenListScreenProps) {
         renderItem={renderOrden}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContainer}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2E7D32']} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#1976D2']} />}
         ListEmptyComponent={renderEmptyState}
         showsVerticalScrollIndicator={false}
       />
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   header: { padding: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#E0E0E0' },
   searchbar: { marginBottom: 12 },
   filterContainer: { flexDirection: 'row', justifyContent: 'flex-end' },
-  filterButton: { borderColor: '#2E7D32' },
+  filterButton: { borderColor: '#1976D2' },
   listContainer: { flexGrow: 1, padding: 16, paddingBottom: 80 },
   ticketCard: { marginBottom: 12, elevation: 2 },
   ticketHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 },

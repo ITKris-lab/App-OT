@@ -113,7 +113,7 @@ export default function ProfileScreen({ user, onLogout }: ProfileScreenProps) {
           <View style={styles.userInfo}>
             <Title style={styles.userName}>{user.name}</Title>
             <Paragraph style={styles.userRole}>
-              <Ionicons name={getRoleIcon(user.role)} size={16} color="#2E7D32" />
+              <Ionicons name={getRoleIcon(user.role)} size={16} color="#1976D2" />
               {' '}{getRoleDisplayName(user.role)}
             </Paragraph>
             {user.sector && (
@@ -128,13 +128,13 @@ export default function ProfileScreen({ user, onLogout }: ProfileScreenProps) {
 
       {/* Botón de Administración visible solo para admins */}
       {user.role === 'admin' && (
-        <Card style={[styles.card, { borderColor: '#2E7D32', borderWidth: 1 }]}>
+        <Card style={[styles.card, { borderColor: '#1976D2', borderWidth: 1 }]}>
           <Card.Content>
             <Button 
               mode="contained" 
               icon="shield-account" 
               onPress={() => navigation.navigate('Admin' as never)}
-              style={{ backgroundColor: '#2E7D32' }}
+              style={{ backgroundColor: '#1976D2' }}
             >
               Panel de Administración
             </Button>
@@ -173,8 +173,8 @@ export default function ProfileScreen({ user, onLogout }: ProfileScreenProps) {
       <Card style={styles.card}>
         <Card.Content>
           <Title style={styles.cardTitle}>Configuración</Title>
-          <List.Item title="Notificaciones" description="Recibir notificaciones de tickets" left={(props) => <List.Icon {...props} icon="bell-outline" />} right={() => <Switch value={notificationsEnabled} onValueChange={setNotificationsEnabled} color="#2E7D32" />} />
-          <List.Item title="Modo Oscuro" description="Activar tema oscuro" left={(props) => <List.Icon {...props} icon="weather-night" />} right={() => <Switch value={darkModeEnabled} onValueChange={setDarkModeEnabled} color="#2E7D32" />} />
+          <List.Item title="Notificaciones" description="Recibir notificaciones de órdenes" left={(props) => <List.Icon {...props} icon="bell-outline" />} right={() => <Switch value={notificationsEnabled} onValueChange={setNotificationsEnabled} color="#1976D2" />} />
+          <List.Item title="Modo Oscuro" description="Activar tema oscuro" left={(props) => <List.Icon {...props} icon="weather-night" />} right={() => <Switch value={darkModeEnabled} onValueChange={setDarkModeEnabled} color="#1976D2" />} />
         </Card.Content>
       </Card>
 
@@ -189,19 +189,19 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F5F5' },
   header: { backgroundColor: 'white', padding: 20, elevation: 2, borderBottomWidth: 1, borderBottomColor: '#E0E0E0' },
   headerContent: { flexDirection: 'row', alignItems: 'center' },
-  avatar: { backgroundColor: '#2E7D32', marginRight: 16 },
+  avatar: { backgroundColor: '#1976D2', marginRight: 16 },
   userInfo: { flex: 1 },
   userName: { fontSize: 24, fontWeight: 'bold', color: '#333', marginBottom: 4 },
-  userRole: { fontSize: 16, color: '#2E7D32', marginBottom: 4 },
+  userRole: { fontSize: 16, color: '#1976D2', marginBottom: 4 },
   userDepartment: { fontSize: 14, color: '#666' }, // Mantener para el sector
   card: { marginHorizontal: 16, marginVertical: 8, elevation: 1 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  cardTitle: { fontSize: 18, fontWeight: 'bold', color: '#2E7D32' },
+  cardTitle: { fontSize: 18, fontWeight: 'bold', color: '#1976D2' },
   editForm: { gap: 16 },
   input: { backgroundColor: '#F8F9FA' },
   editActions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 16, gap: 8 },
   editButton: { flex: 1 },
-  saveButton: { backgroundColor: '#2E7D32' },
+  saveButton: { backgroundColor: '#1976D2' },
   infoList: { gap: 16 },
   infoItem: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   infoLabel: { fontSize: 14, color: '#666', fontWeight: '500', minWidth: 100 },

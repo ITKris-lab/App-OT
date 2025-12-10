@@ -175,7 +175,7 @@ export default function CreateOrdenScreen({ user }: CreateOrdenScreenProps) {
             <View style={styles.categoryGrid}>
               {ORDEN_CATEGORIES.map((cat) => (
                 <TouchableOpacity key={cat.value} style={[styles.categoryItem, category === cat.value && styles.categoryItemSelected]} onPress={() => setCategory(cat.value)}>
-                  <MaterialCommunityIcons name={cat.icon} size={22} color={category === cat.value ? '#2E7D32' : '#666'} />
+                  <MaterialCommunityIcons name={cat.icon} size={22} color={category === cat.value ? '#1976D2' : '#666'} />
                   <Text style={[styles.categoryText, category === cat.value && styles.categoryTextSelected]}>{cat.label}</Text>
                 </TouchableOpacity>
               ))}
@@ -222,7 +222,7 @@ export default function CreateOrdenScreen({ user }: CreateOrdenScreenProps) {
         visible={snackbarVisible}
         onDismiss={() => setSnackbarVisible(false)}
         duration={1500}
-        style={{ backgroundColor: '#2E7D32', marginBottom: 20 }}
+        style={{ backgroundColor: '#1976D2', marginBottom: 20 }}
         action={{
           label: 'OK',
           onPress: () => {
@@ -238,19 +238,19 @@ export default function CreateOrdenScreen({ user }: CreateOrdenScreenProps) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F5F5' },
   scrollView: { flex: 1 },
-  header: { backgroundColor: '#2E7D32', padding: 20, alignItems: 'center' },
+  header: { backgroundColor: '#1976D2', padding: 20, alignItems: 'center' },
   headerTitle: { color: 'white', fontSize: 24, fontWeight: 'bold', marginTop: 8 },
   headerSubtitle: { color: 'rgba(255, 255, 255, 0.8)', fontSize: 16, marginTop: 4 },
   card: { margin: 16, marginTop: -40, elevation: 4 },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#2E7D32', marginBottom: 16, marginTop: 8 },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#1976D2', marginBottom: 16, marginTop: 8 },
   input: { marginBottom: 16 },
   divider: { marginVertical: 16 },
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around', gap: 8 },
   categoryItem: { width: '45%', padding: 12, borderRadius: 8, alignItems: 'center', borderWidth: 2, borderColor: 'transparent', backgroundColor: '#F8F9FA' },
-  categoryItemSelected: { borderColor: '#2E7D32', backgroundColor: 'rgba(46, 125, 50, 0.1)' },
+  categoryItemSelected: { borderColor: '#1976D2', backgroundColor: 'rgba(25, 118, 210, 0.1)' },
   categoryText: { fontSize: 12, textAlign: 'center', marginTop: 6, color: '#666' },
-  categoryTextSelected: { color: '#2E7D32', fontWeight: 'bold' },
-  submitButton: { marginTop: 16, backgroundColor: '#2E7D32' },
+  categoryTextSelected: { color: '#1976D2', fontWeight: 'bold' },
+  submitButton: { marginTop: 16, backgroundColor: '#1976D2' },
   buttonContent: { paddingVertical: 8 },
   evidenceContainer: { alignItems: 'center', marginVertical: 8 },
   uploadButton: { width: '100%' },

@@ -64,7 +64,7 @@ export default function AdminScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2E7D32" />
+        <ActivityIndicator size="large" color="#1976D2" />
       </View>
     );
   }
@@ -81,7 +81,7 @@ export default function AdminScreen() {
           {/* Tarjeta Principal: Gestión de Usuarios */}
           <Card style={[styles.card, styles.mainActionCard]}>
             <Card.Content style={{ alignItems: 'center', padding: 20 }}>
-              <Ionicons name="people-circle-outline" size={64} color="#2E7D32" />
+              <Ionicons name="people-circle-outline" size={64} color="#1976D2" />
               <Title style={{ marginTop: 16 }}>Gestión de Usuarios</Title>
               <Paragraph style={{ textAlign: 'center', marginBottom: 20, color: '#666' }}>
                 Administrar cuentas, roles y sectores del personal.
@@ -89,7 +89,7 @@ export default function AdminScreen() {
               <Button 
                 mode="contained" 
                 onPress={() => navigation.navigate('AdminUsers' as never)} 
-                style={{ backgroundColor: '#2E7D32', width: '100%' }}
+                style={{ backgroundColor: '#1976D2', width: '100%' }}
                 icon="account-cog"
               >
                 Ir a Gestión de Usuarios
@@ -151,16 +151,16 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F5F5' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { backgroundColor: 'white', padding: 16, elevation: 4 },
-  headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#2E7D32' },
+  headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#1976D2' },
   scrollView: { flex: 1 },
   content: { padding: 16 },
   card: { marginBottom: 16, elevation: 2, backgroundColor: 'white' },
-  mainActionCard: { borderLeftWidth: 4, borderLeftColor: '#2E7D32' },
+  mainActionCard: { borderLeftWidth: 4, borderLeftColor: '#1976D2' },
   statsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   statCard: { flex: 1 },
   statNumber: { fontSize: 24, fontWeight: 'bold', color: '#333' },
   statLabel: { fontSize: 12, color: '#666' },
-  cardTitle: { fontSize: 18, fontWeight: 'bold', color: '#2E7D32', marginBottom: 16 },
+  cardTitle: { fontSize: 18, fontWeight: 'bold', color: '#1976D2', marginBottom: 16 },
   categoryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
   categoryInfo: { flexDirection: 'row', alignItems: 'center' },
   categoryLabel: { fontSize: 14, color: '#333', marginLeft: 12 },

@@ -16,7 +16,7 @@ import {
   Paragraph,
   Text,
 } from 'react-native-paper';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
 
@@ -24,8 +24,8 @@ import { auth } from '../firebaseConfig';
 const HOSPITAL_INFO = {
   name: 'Hospital de Collipulli',
   address: 'Av. Manuel Rodriguez 1671, Collipulli, Chile',
-  phone: '45-2-602066 anexo 454066',
-  email: 'christopher.burdiles@araucanianorte.cl',
+  phone: '+56 9 82573375',
+  email: 'tic.kym24@gmail.com',
 };
 
 export default function LoginScreen() {
@@ -66,10 +66,10 @@ export default function LoginScreen() {
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.header}>
-          <Ionicons name="medical-outline" size={60} color="#2E7D32" />
+          <MaterialCommunityIcons name="tools" size={60} color="#1976D2" />
           <Title style={styles.title}>{HOSPITAL_INFO.name}</Title>
           <Paragraph style={styles.subtitle}>
-            Sistema de Soporte de Tickets
+            Sistema Ordenes de Trabajo
           </Paragraph>
         </View>
 
@@ -135,14 +135,14 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F5F5' },
   scrollContainer: { flexGrow: 1, padding: 20, justifyContent: 'center' },
   header: { alignItems: 'center', marginBottom: 30 },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#2E7D32', textAlign: 'center', marginTop: 10 },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#1976D2', textAlign: 'center', marginTop: 10 },
   subtitle: { fontSize: 16, color: '#666', textAlign: 'center', marginTop: 5 },
   card: { elevation: 4, marginBottom: 20 },
-  cardTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: '#2E7D32' },
+  cardTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: '#1976D2' },
   input: { marginBottom: 15 },
-  loginButton: { marginTop: 20, backgroundColor: '#2E7D32' },
+  loginButton: { marginTop: 20, backgroundColor: '#1976D2' },
   buttonContent: { paddingVertical: 8 },
-  toggleText: { marginTop: 20, textAlign: 'center', color: '#2E7D32', fontWeight: 'bold' },
+  toggleText: { marginTop: 20, textAlign: 'center', color: '#1976D2', fontWeight: 'bold' },
   footer: { alignItems: 'center', marginTop: 20 },
   footerText: { fontSize: 12, color: '#666', textAlign: 'center', marginBottom: 5 },
 });

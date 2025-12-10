@@ -166,7 +166,7 @@ export default function OrdenDetailScreen({ user }: OrdenDetailScreenProps) {
     return <View style={styles.loadingContainer}><MaterialCommunityIcons name="timer-sand" size={48} color="#666" /><Text style={styles.loadingText}>Cargando detalles...</Text></View>;
   }
   
-  const categoryColor = '#2E7D32';
+  const categoryColor = '#1976D2';
   const statusColor = getStatusColor(orden.status);
   const priorityColor = getPriorityColor(orden.priority);
 
@@ -191,7 +191,7 @@ export default function OrdenDetailScreen({ user }: OrdenDetailScreenProps) {
               <Menu
                 visible={adminMenuVisible}
                 onDismiss={() => setAdminMenuVisible(false)}
-                anchor={<IconButton icon="cog-outline" iconColor="#2E7D32" size={24} onPress={() => setAdminMenuVisible(true)} />}
+                anchor={<IconButton icon="cog-outline" iconColor="#1976D2" size={24} onPress={() => setAdminMenuVisible(true)} />}
               >
                 <Menu.Item onPress={() => {}} title="Acciones" disabled />
                 <Divider />
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
     chipText: { fontSize: 10, fontWeight: 'bold' },
     card: { marginHorizontal: 16, marginVertical: 8, elevation: 1, backgroundColor: 'white' },
     commentCard: { marginTop: 4, marginBottom: 4 },
-    sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#2E7D32', marginBottom: 12 },
+    sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#1976D2', marginBottom: 12 },
     description: { fontSize: 16, lineHeight: 24, color: '#333' },
     divider: { marginVertical: 16 },
     infoGrid: { gap: 12 },
@@ -326,5 +326,5 @@ const styles = StyleSheet.create({
     commentContent: { fontSize: 14, color: '#333', lineHeight: 20, marginLeft: 44 },
     addCommentContainer: { },
     commentInput: { marginBottom: 12 },
-    addCommentButton: { backgroundColor: '#2E7D32' },
+    addCommentButton: { backgroundColor: '#1976D2' },
 });

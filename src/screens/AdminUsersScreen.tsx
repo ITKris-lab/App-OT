@@ -200,7 +200,7 @@ export default function AdminUsersScreen() {
           </View>
         </View>
         <View style={styles.actions}>
-          <IconButton icon="pencil" mode="contained" containerColor="#F5F5F5" iconColor="#2E7D32" size={20} onPress={() => openEditModal(item)} />
+          <IconButton icon="pencil" mode="contained" containerColor="#F5F5F5" iconColor="#1976D2" size={20} onPress={() => openEditModal(item)} />
           <IconButton icon="trash-can-outline" mode="contained" containerColor="#FFEBEE" iconColor="#C62828" size={20} onPress={() => handleDelete(item)} />
         </View>
       </Card.Content>
@@ -270,11 +270,11 @@ export default function AdminUsersScreen() {
             <Text style={styles.label}>Rol del Usuario:</Text>
             <RadioButton.Group onValueChange={val => setRole(val as 'admin' | 'patient')} value={role}>
               <View style={styles.radioRow}>
-                <RadioButton value="patient" color="#2E7D32" />
+                <RadioButton value="patient" color="#1976D2" />
                 <Text>Usuario Básico</Text>
               </View>
               <View style={styles.radioRow}>
-                <RadioButton value="admin" color="#2E7D32" />
+                <RadioButton value="admin" color="#1976D2" />
                 <Text style={{ fontWeight: 'bold' }}>Administrador</Text>
               </View>
             </RadioButton.Group>
@@ -304,12 +304,12 @@ const styles = StyleSheet.create({
   chip: { height: 26 },
   actions: { flexDirection: 'column', gap: 4 },
   emptyState: { alignItems: 'center', marginTop: 40 },
-  fab: { position: 'absolute', margin: 16, right: 0, bottom: 0, backgroundColor: '#2E7D32' },
+  fab: { position: 'absolute', margin: 16, right: 0, bottom: 0, backgroundColor: '#1976D2' },
   modalContainer: { backgroundColor: 'white', padding: 20, margin: 20, borderRadius: 8 },
-  modalTitle: { marginBottom: 16, color: '#2E7D32', textAlign: 'center' },
+  modalTitle: { marginBottom: 16, color: '#1976D2', textAlign: 'center' },
   input: { marginBottom: 12 },
   label: { fontSize: 16, marginTop: 8, marginBottom: 8, fontWeight: 'bold' },
   radioRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
   modalActions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 20, gap: 10 },
-  saveButton: { backgroundColor: '#2E7D32' },
+  saveButton: { backgroundColor: '#1976D2' },
 });

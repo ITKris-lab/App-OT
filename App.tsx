@@ -33,8 +33,8 @@ const theme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    primary: '#2E7D32',
-    accent: '#4CAF50', 
+    primary: '#1976D2',
+    accent: '#2196F3', 
     background: '#F5F5F5',
     surface: '#FFFFFF',
     text: '#212121',

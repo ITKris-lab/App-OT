@@ -33,8 +33,8 @@ const ORDEN_STATUSES: { value: OrdenStatus; label: string; color: string }[] = [
 const HOSPITAL_INFO = {
   name: 'Hospital de Collipulli',
   address: 'Av. Manuel Rodriguez 1671, Collipulli, Chile',
-  phone: '45-2-602066 Anexo 454066',
-  email: 'christopher.burdiles@araucanianorte.cl',
+  phone: '+56 9 82573375',
+  email: 'tic.kym24@gmail.com',
 };
 
 // Helper para determinar si un color es claro u oscuro
@@ -200,10 +200,10 @@ export default function HomeScreen({ user }: HomeScreenProps) {
           <Card.Content>
             <Title style={styles.cardTitle}>Información de Contacto</Title>
             <View style={styles.hospitalInfo}>
-              <View style={styles.infoItem}><MaterialCommunityIcons name="map-marker-outline" size={16} color="#2E7D32" /><Text style={styles.infoText}>{HOSPITAL_INFO.address}</Text></View>
-              <View style={styles.infoItem}><MaterialCommunityIcons name="phone-outline" size={16} color="#2E7D32" /><Text style={styles.infoText}>{HOSPITAL_INFO.phone}</Text></View>
+              <View style={styles.infoItem}><MaterialCommunityIcons name="map-marker-outline" size={16} color="#1976D2" /><Text style={styles.infoText}>{HOSPITAL_INFO.address}</Text></View>
+              <View style={styles.infoItem}><MaterialCommunityIcons name="phone-outline" size={16} color="#1976D2" /><Text style={styles.infoText}>{HOSPITAL_INFO.phone}</Text></View>
               <View style={styles.infoItem}><MaterialCommunityIcons name="whatsapp" size={16} color="#25D366" /><Text style={styles.infoText}>MINSAL</Text></View>
-              <View style={styles.infoItem}><MaterialCommunityIcons name="email-outline" size={16} color="#2E7D32" /><Text style={styles.infoText}>{HOSPITAL_INFO.email}</Text></View>
+              <View style={styles.infoItem}><MaterialCommunityIcons name="email-outline" size={16} color="#1976D2" /><Text style={styles.infoText}>{HOSPITAL_INFO.email}</Text></View>
             </View>
           </Card.Content>
         </Card>
@@ -215,12 +215,12 @@ export default function HomeScreen({ user }: HomeScreenProps) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F5F5' },
   scrollView: { flex: 1 },
-  welcomeCard: { margin: 16, padding: 16, backgroundColor: '#2E7D32', borderRadius: 12 },
+  welcomeCard: { margin: 16, padding: 16, backgroundColor: '#1976D2', borderRadius: 12 },
   welcomeHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   greeting: { color: 'white', fontSize: 20, fontWeight: 'bold' },
   role: { color: 'rgba(255, 255, 255, 0.8)', fontSize: 14 },
   statsCard: { margin: 16, marginTop: 8 },
-  cardTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 16, color: '#2E7D32' },
+  cardTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 16, color: '#1976D2' },
   statsRow: { flexDirection: 'row', justifyContent: 'space-around' },
   statItem: { alignItems: 'center' },
   statNumber: { fontSize: 24, fontWeight: 'bold', color: '#333' },
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   emptyState: { alignItems: 'center', padding: 32 },
   emptyText: { fontSize: 16, color: '#666', marginTop: 16, marginBottom: 24 },
-  createButton: { backgroundColor: '#2E7D32' },
+  createButton: { backgroundColor: '#1976D2' },
   ticketCard: { marginBottom: 12, elevation: 2 },
   ticketHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 },
   ticketTitle: { fontSize: 16, fontWeight: 'bold', flex: 1, marginRight: 8 },
