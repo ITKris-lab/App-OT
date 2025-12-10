@@ -175,7 +175,7 @@ export default function HomeScreen({ user }: HomeScreenProps) {
                           textStyle={[styles.chipText, { color: priorityTextColor }]}
                           compact
                         >
-                          {orden.priority.toUpperCase()}
+                          {(orden.priority === 'low' ? 'Baja' : orden.priority === 'medium' ? 'Media' : 'Alta').toUpperCase()}
                         </Chip>
                       </View>
                     </Card.Content>
