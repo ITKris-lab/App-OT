@@ -183,7 +183,7 @@ export default function OrdenDetailScreen({ user }: OrdenDetailScreenProps) {
             <View style={styles.metaContainer}>
               <Chip icon={() => <MaterialCommunityIcons name={getCategoryIcon(orden.category)} size={16} color={categoryTextColor} />} style={[styles.categoryChip, { backgroundColor: categoryColor }]} textStyle={[styles.chipText, { color: categoryTextColor }]} compact>{ORDEN_CATEGORIES.find(c => c.value === orden.category)?.label}</Chip>
               <Chip style={[styles.statusChip, { backgroundColor: statusColor }]} textStyle={[styles.chipText, { color: statusTextColor }]} compact>{ORDEN_STATUSES.find(s => s.value === orden.status)?.label}</Chip>
-              <Chip style={[styles.priorityChip, { backgroundColor: priorityColor }]} textStyle={[styles.chipText, { color: priorityTextColor }]} compact>{orden.priority.toUpperCase()}</Chip>
+              <Chip style={[styles.priorityChip, { backgroundColor: priorityColor }]} textStyle={[styles.chipText, { color: priorityTextColor }]} compact>{orden.priority === 'low' ? 'Baja' : orden.priority === 'medium' ? 'Media' : orden.priority === 'high' ? 'Alta' : orden.priority}</Chip>
             </View>
           </View>
           {user?.role === 'admin' && (
