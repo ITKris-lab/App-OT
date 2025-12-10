@@ -28,12 +28,15 @@ import { db } from '../firebaseConfig';
 import { Orden, Comment, User, OrdenStatus, OrdenPriority, OrdenCategory } from '../types';
 
 const ORDEN_CATEGORIES: { value: OrdenCategory; label: string; icon: keyof typeof MaterialCommunityIcons.glyphMap }[] = [
-  { value: 'hardware', label: 'Hardware', icon: 'memory' },
-  { value: 'software', label: 'Software', icon: 'apps' },
-  { value: 'network', label: 'Redes', icon: 'wifi' },
-  { value: 'printer', label: 'Impresoras', icon: 'printer-outline' },
-  { value: 'user_support', label: 'Soporte Usuario', icon: 'account-circle-outline' },
-  { value: 'other', label: 'Otro', icon: 'help-circle-outline' },
+  { value: 'climatizacion', label: 'Climatización', icon: 'air-conditioner' },
+  { value: 'electrica', label: 'Eléctrica', icon: 'lightning-bolt' },
+  { value: 'mecanica', label: 'Mecánica', icon: 'cog' },
+  { value: 'electronica', label: 'Electrónica', icon: 'chip' },
+  { value: 'operacion', label: 'Operación', icon: 'dolly' },
+  { value: 'fontaneria', label: 'Fontanería', icon: 'water-pump' },
+  { value: 'albanileria', label: 'Albañilería', icon: 'wall' },
+  { value: 'pintura', label: 'Pintura', icon: 'format-paint' },
+  { value: 'carpinteria', label: 'Carpintería', icon: 'hand-saw' },
 ];
 
 const ORDEN_PRIORITIES: { value: OrdenPriority; label: string; color: string }[] = [
@@ -82,7 +85,13 @@ export default function OrdenDetailScreen({ user }: OrdenDetailScreenProps) {
     const unsubscribeOrden = onSnapshot(ordenDocRef, (doc) => {
       if (doc.exists()) {
         const data = doc.data();
-        setOrden({ id: doc.id, ...data, createdAt: data.createdAt?.toDate() ?? new Date(), updatedAt: data.updatedAt?.toDate() ?? new Date() } as Orden);
+        setOrden({ 
+          id: doc.id, 
+          ...data, 
+          createdAt: data.createdAt?.toDate() ?? new Date(), 
+          updatedAt: data.updatedAt?.toDate() ?? new Date(),
+          resolvedAt: data.resolvedAt?.toDate(), // Recuperar fecha de resolución
+        } as Orden);
       } else {
         if (navigation.canGoBack()) {
            navigation.goBack();
@@ -124,6 +133,14 @@ export default function OrdenDetailScreen({ user }: OrdenDetailScreenProps) {
     } catch (error) {
       Alert.alert('Error', 'No se pudo actualizar la orden.');
     }
+  };
+
+  // Función especial para resolver y guardar la fecha
+  const handleResolve = () => {
+    handleUpdate({ 
+      status: 'resolved',
+      resolvedAt: serverTimestamp() // Guardamos la fecha actual
+    });
   };
 
   const performDelete = async () => {
@@ -185,6 +202,7 @@ export default function OrdenDetailScreen({ user }: OrdenDetailScreenProps) {
               <Chip style={[styles.statusChip, { backgroundColor: statusColor }]} textStyle={[styles.chipText, { color: statusTextColor }]} compact>{ORDEN_STATUSES.find(s => s.value === orden.status)?.label}</Chip>
               <Chip style={[styles.priorityChip, { backgroundColor: priorityColor }]} textStyle={[styles.chipText, { color: priorityTextColor }]} compact>{orden.priority === 'low' ? 'Baja' : orden.priority === 'medium' ? 'Media' : orden.priority === 'high' ? 'Alta' : orden.priority}</Chip>
             </View>
+            <Text style={styles.ticketId}>ID: {orden.id}</Text>
           </View>
           {user?.role === 'admin' && (
             <View>
@@ -195,7 +213,7 @@ export default function OrdenDetailScreen({ user }: OrdenDetailScreenProps) {
               >
                 <Menu.Item onPress={() => {}} title="Acciones" disabled />
                 <Divider />
-                {orden.status !== 'resolved' && <Menu.Item leadingIcon="check" onPress={() => handleUpdate({ status: 'resolved' })} title="Resolver" />}
+                {orden.status !== 'resolved' && <Menu.Item leadingIcon="check" onPress={handleResolve} title="Resolver" />}
                 {orden.status !== 'in_progress' && <Menu.Item leadingIcon="play" onPress={() => handleUpdate({ status: 'in_progress' })} title="En Progreso" />}
                 <Divider />
                 <Menu.Item title="Prioridad" disabled />
@@ -219,7 +237,11 @@ export default function OrdenDetailScreen({ user }: OrdenDetailScreenProps) {
           <View style={styles.infoGrid}>
             <View style={styles.infoItem}><MaterialCommunityIcons name="map-marker-outline" size={16} color="#666" /><Text style={styles.infoLabel}>Ubicación:</Text><Text style={styles.infoValue}>{orden.location || 'No especificada'}</Text></View>
             <View style={styles.infoItem}><MaterialCommunityIcons name="calendar-outline" size={16} color="#666" /><Text style={styles.infoLabel}>Creado:</Text><Text style={styles.infoValue}>{formatDate(orden.createdAt)}</Text></View>
+            {orden.resolvedAt && (
+              <View style={styles.infoItem}><MaterialCommunityIcons name="check-circle-outline" size={16} color="#2E7D32" /><Text style={styles.infoLabel}>Resuelto:</Text><Text style={styles.infoValue}>{formatDate(orden.resolvedAt)}</Text></View>
+            )}
             <View style={styles.infoItem}><MaterialCommunityIcons name="account-outline" size={16} color="#666" /><Text style={styles.infoLabel}>Creado por:</Text><Text style={styles.infoValue}>{orden.createdByName}</Text></View>
+             <View style={styles.infoItem}><MaterialCommunityIcons name="tools" size={16} color="#666" /><Text style={styles.infoLabel}>Actividad:</Text><Text style={styles.infoValue}>{orden.activity ? orden.activity.toUpperCase() : 'No especificada'}</Text></View>
           </View>
         </Card.Content>
       </Card>
@@ -302,6 +324,7 @@ const styles = StyleSheet.create({
     headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
     titleContainer: { flex: 1, marginRight: 10 },
     title: { fontSize: 22, fontWeight: 'bold', color: '#333', marginBottom: 12 },
+    ticketId: { fontSize: 12, color: '#999', marginTop: 4 },
     metaContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     categoryChip: { justifyContent: 'center', alignItems: 'center' },
     statusChip: { justifyContent: 'center', alignItems: 'center' },
