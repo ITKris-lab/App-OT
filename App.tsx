@@ -21,6 +21,7 @@ import OrdenDetailScreen from './src/screens/OrdenDetailScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import AdminScreen from './src/screens/AdminScreen';
 import AdminUsersScreen from './src/screens/AdminUsersScreen';
+import ReportsScreen from './src/screens/ReportsScreen';
 
 // Types
 import { User } from './src/types';
@@ -191,6 +192,11 @@ export default function App() {
                   name="AdminUsers" 
                   component={AdminUsersScreen}
                   options={{ title: 'Gestionar Usuarios' }}
+                />
+                 <Stack.Screen 
+                  name="Reports" 
+                  component={ReportsScreen}
+                  options={{ title: 'Reportes y Estadísticas' }}
                 />
               </>
             )}

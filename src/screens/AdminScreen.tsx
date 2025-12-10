@@ -19,15 +19,19 @@ import { useNavigation } from '@react-navigation/native';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Orden, User, OrdenCategory } from '../types';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 // Constantes
-const ORDEN_CATEGORIES: { value: OrdenCategory; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { value: 'hardware', label: 'Hardware', icon: 'hardware-chip-outline' },
-  { value: 'software', label: 'Software', icon: 'apps-outline' },
-  { value: 'network', label: 'Redes', icon: 'wifi-outline' },
-  { value: 'printer', label: 'Impresoras', icon: 'print-outline' },
-  { value: 'user_support', label: 'Soporte Usuario', icon: 'person-circle-outline' },
-  { value: 'other', label: 'Otro', icon: 'help-circle-outline' },
+const ORDEN_CATEGORIES: { value: OrdenCategory; label: string; icon: keyof typeof MaterialCommunityIcons.glyphMap }[] = [
+  { value: 'climatizacion', label: 'Climatización', icon: 'air-conditioner' },
+  { value: 'electrica', label: 'Eléctrica', icon: 'lightning-bolt' },
+  { value: 'mecanica', label: 'Mecánica', icon: 'cog' },
+  { value: 'electronica', label: 'Electrónica', icon: 'chip' },
+  { value: 'operacion', label: 'Operación', icon: 'dolly' },
+  { value: 'fontaneria', label: 'Fontanería', icon: 'water-pump' },
+  { value: 'albanileria', label: 'Albañilería', icon: 'wall' },
+  { value: 'pintura', label: 'Pintura', icon: 'format-paint' },
+  { value: 'carpinteria', label: 'Carpintería', icon: 'hand-saw' },
 ];
 
 export default function AdminScreen() {
@@ -97,6 +101,25 @@ export default function AdminScreen() {
             </Card.Content>
           </Card>
 
+          {/* Tarjeta de Reportes */}
+          <Card style={[styles.card, { borderLeftWidth: 4, borderLeftColor: '#1B5E20' }]}>
+            <Card.Content style={{ alignItems: 'center', padding: 20 }}>
+              <MaterialCommunityIcons name="chart-bar" size={64} color="#1B5E20" />
+              <Title style={{ marginTop: 16 }}>Reportes y Estadísticas</Title>
+              <Paragraph style={{ textAlign: 'center', marginBottom: 20, color: '#666' }}>
+                Ver gráficos, métricas y descargar historial.
+              </Paragraph>
+              <Button 
+                mode="contained" 
+                onPress={() => navigation.navigate('Reports' as never)} 
+                style={{ backgroundColor: '#1B5E20', width: '100%' }}
+                icon="file-chart"
+              >
+                Ver Reportes
+              </Button>
+            </Card.Content>
+          </Card>
+
           {/* Estadísticas Rápidas */}
           <View style={styles.statsRow}>
              <Card style={[styles.card, styles.statCard]}>
@@ -131,7 +154,7 @@ export default function AdminScreen() {
                 return (
                   <View key={category.value} style={styles.categoryRow}>
                     <View style={styles.categoryInfo}>
-                      <Ionicons name={category.icon as any} size={20} color="#666" />
+                      <MaterialCommunityIcons name={category.icon as any} size={20} color="#666" />
                       <Text style={styles.categoryLabel}>{category.label}</Text>
                     </View>
                     <Text style={styles.categoryCount}>{count}</Text>
